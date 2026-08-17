@@ -74,7 +74,7 @@
           
           <!-- Status Bar -->
           <div class="px-6 pt-3 pb-1 flex justify-between items-center text-[10px] font-bold text-gray-800 shrink-0 z-30">
-            <span>09:41</span>
+            <span id="status-bar-time">09:41</span>
             <div class="w-16 h-4 bg-[#221c1d] rounded-full mx-auto"></div>
             <div class="flex items-center gap-1">
               <i data-lucide="wifi" class="w-3 h-3"></i>
@@ -352,7 +352,7 @@
             </div>
           </div>
 
-          <!-- 🛍️ MODAL 2: 추천 상품 상세 모달 (로그 추가 버튼 연동 복원) -->
+          <!-- 🛍️ MODAL 2: 추천 상품 상세 모달 (로그에 추가 기능) -->
           <div id="detail-modal" class="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
             <div class="bg-white w-full max-w-[280px] rounded-2xl p-4 space-y-3 shadow-2xl">
               <div class="flex justify-between items-center border-b pb-2">
@@ -375,7 +375,6 @@
                 </p>
               </div>
 
-              <!-- 🎁 상세 모달에서 바로 로그에 추가하는 버튼 복원 -->
               <div class="pt-1 space-y-1.5 border-t">
                 <button onclick="quickAddLogFromDetail()" class="w-full py-2 bg-brand-500 hover:bg-brand-600 active:scale-[0.98] text-white font-bold text-[11px] rounded-xl shadow-sm transition flex items-center justify-center gap-1">
                   <i data-lucide="plus" class="w-3.5 h-3.5"></i>
@@ -497,7 +496,6 @@
     0x0d520];
 
   var solarMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-
   var gan = ['\u7532', '\u4e59', '\u4e19', '\u4e01', '\u620a', '\u5df1', '\u5e9a', '\u8f9b', '\u58ec', '\u7678'];
   var zhi = ['\u5b50', '\u4e11', '\u5bc5', '\u536f', '\u8fb0', '\u5df3', '\u5348', '\u672a', '\u7533', '\u9149', '\u620c', '\u4ea5'];
   var animals = ['\u9f20', '\u725b', '\u864e', '\u5154', '\u9f99', '\u86c7', '\u9a6c', '\u7f8a', '\u7334', '\u9e21', '\u72d7', '\u732a'];
@@ -528,7 +526,7 @@
     '97b6b97bd19801ec9210c965cc920e', '97bcf7f1487f595b0b0bb0b6fb0722', '7f0e397bd097c35b0b6fc920fb0722',
     '9778397bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e', '97bcf7f1487f531b0b0bb0b6fb0722',
     '7f0e397bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e',
-    '97bcf7f1487f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa',
+    '97bcf7f1487f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b0bc920fb0722', '9778397bd097c36b0b6fc9274c91aa',
     '97b6b97bd19801ec9210c9274c920e', '97bcf7f0e47f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b0bc920fb0722',
     '9778397bd097c36b0b6fc9210c91aa', '97b6b97bd197c36c9210c9274c920e', '97bcf7f0e47f531b0b0bb0b6fb0722',
     '7f0e397bd07f595b0b0bc920fb0722', '9778397bd097c36b0b6fc9210c8dc2', '9778397bd097c36c9210c9274c920e',
@@ -579,18 +577,7 @@
   var nStr4 = ['\u96f6', '\u4e00', '\u4e8c', '\u4e09', '\u56db', '\u4e94', '\u516d', '\u4e03', '\u516b', '\u4e5d', '\u5341'];
 
   const solarLunar = {
-    lunarInfo,
-    solarMonth,
-    gan,
-    zhi,
-    animals,
-    lunarTerm,
-    lTermInfo,
-    nStr1,
-    nStr2,
-    nStr3,
-    nStr4,
-
+    lunarInfo, solarMonth, gan, zhi, animals, lunarTerm, lTermInfo, nStr1, nStr2, nStr3, nStr4,
     lYearDays(y) {
       let sum = 348;
       const info = lunarInfo[y - 1900];
@@ -608,23 +595,17 @@
       sum += info & 0x0010 ? 1 : 0;
       return sum + solarLunar.leapDays(y);
     },
-
-    leapMonth(y) {
-      return lunarInfo[y - 1900] & 0xf;
-    },
-
+    leapMonth(y) { return lunarInfo[y - 1900] & 0xf; },
     leapDays(y) {
       if (solarLunar.leapMonth(y)) {
         return lunarInfo[y - 1900] & 0x10000 ? 30 : 29;
       }
       return 0;
     },
-
     monthDays(y, m) {
       if (m > 12 || m < 1) return -1;
       return lunarInfo[y - 1900] & (0x10000 >> m) ? 30 : 29;
     },
-
     solarDays(y, m) {
       if (m > 12 || m < 1) return -1;
       const ms = m - 1;
@@ -634,11 +615,7 @@
         return solarMonth[ms];
       }
     },
-
-    toGanZhi(offset) {
-      return gan[offset % 10] + zhi[offset % 12];
-    },
-
+    toGanZhi(offset) { return gan[offset % 10] + zhi[offset % 12]; },
     getTerm(y, n) {
       if (y < 1900 || y > 2100 || n < 1 || n > 24) return -1;
       const _table = lTermInfo[y - 1900];
@@ -660,7 +637,6 @@
       ];
       return parseInt(_calDay[n - 1]);
     },
-
     toChinaYear(y) {
       const oxxx = Math.floor(y / 1000);
       const xoxx = Math.floor((y % 1000) / 100);
@@ -668,14 +644,12 @@
       const xxxo = y % 10;
       return nStr4[oxxx] + nStr4[xoxx] + nStr4[xxox] + nStr4[xxxo] + '\u5E74';
     },
-
     toChinaMonth(m) {
       if (m > 12 || m < 1) return -1;
       let s = nStr3[m - 1];
       s += '\u6708';
       return s;
     },
-
     toChinaDay(d) {
       let s = '';
       switch (d) {
@@ -688,7 +662,6 @@
       }
       return s;
     },
-
     getAnimal(y, m, d) {
       if (m !== undefined && d !== undefined) {
         const term3 = solarLunar.getTerm(y, 3);
@@ -698,7 +671,6 @@
       }
       return animals[(y - 4) % 12];
     },
-
     solar2lunar(y, m, d) {
       if (y == null || m == null || d == null) {
         const objDate = new Date();
@@ -706,11 +678,7 @@
         m = objDate.getMonth() + 1;
         d = objDate.getDate();
       }
-
-      y = Number(y);
-      m = Number(m);
-      d = Number(d);
-
+      y = Number(y); m = Number(m); d = Number(d);
       if (isNaN(y) || isNaN(m) || isNaN(d)) return -1;
       if (y < 1900 || y > 2100) return -1;
       if (y === 1900 && m === 1 && d < 31) return -1;
@@ -783,70 +751,46 @@
       }
       const month = i;
       const day = offset + 1;
-
       const sm = m - 1;
       const term3 = solarLunar.getTerm(y, 3);
       let gzY = solarLunar.toGanZhi(y - 4);
       if (m < 2 || (m === 2 && d < term3)) {
         gzY = solarLunar.toGanZhi(y - 1 - 4);
       }
-
       const firstNode = solarLunar.getTerm(y, m * 2 - 1);
       const secondNode = solarLunar.getTerm(y, m * 2);
-
       let gzM = solarLunar.toGanZhi((y - 1900) * 12 + m + 11);
       if (d >= firstNode) {
         gzM = solarLunar.toGanZhi((y - 1900) * 12 + m + 12);
       }
-
       let isTerm = false;
       let term = '';
-      if (firstNode === d) {
-        isTerm = true;
-        term = lunarTerm[m * 2 - 2];
-      }
-      if (secondNode === d) {
-        isTerm = true;
-        term = lunarTerm[m * 2 - 1];
-      }
+      if (firstNode === d) { isTerm = true; term = lunarTerm[m * 2 - 2]; }
+      if (secondNode === d) { isTerm = true; term = lunarTerm[m * 2 - 1]; }
       const dayCyclical = Date.UTC(y, sm, 1, 0, 0, 0, 0) / 86400000 + 25567 + 10;
       const gzD = solarLunar.toGanZhi(dayCyclical + d - 1);
       return {
-        lYear: year,
-        lMonth: month,
-        lDay: day,
+        lYear: year, lMonth: month, lDay: day,
         animal: solarLunar.getAnimal(year),
         yearCn: solarLunar.toChinaYear(year),
         monthCn: (isLeap && leapMonth === month ? '\u95f0' : '') + solarLunar.toChinaMonth(month),
         dayCn: solarLunar.toChinaDay(day),
-        cYear: y,
-        cMonth: m,
-        cDay: d,
-        gzYear: gzY,
-        gzMonth: gzM,
-        gzDay: gzD,
-        isToday,
-        isLeap,
-        nWeek: nWeekAdjusted,
+        cYear: y, cMonth: m, cDay: d,
+        gzYear: gzY, gzMonth: gzM, gzDay: gzD,
+        isToday, isLeap, nWeek: nWeekAdjusted,
         ncWeek: '\u661f\u671f' + cWeek,
-        isTerm,
-        term,
+        isTerm, term,
       };
     },
-
     lunar2solar(y, m, d, isLeapMonth) {
-      y = Number(y);
-      m = Number(m);
-      d = Number(d);
+      y = Number(y); m = Number(m); d = Number(d);
       isLeapMonth = Boolean(isLeapMonth);
-
       if (isNaN(y) || isNaN(m) || isNaN(d)) return -1;
       const leapMonth = solarLunar.leapMonth(y);
       if (isLeapMonth && leapMonth !== m) return -1;
       if ((y === 2100 && m === 12 && d > 1) || (y === 1900 && m === 1 && d < 31)) return -1;
       const day = solarLunar.monthDays(y, m);
       if (y < 1900 || y > 2100 || d > day) return -1;
-
       let offset = 0;
       for (let i = 1900; i < y; i++) {
         offset += solarLunar.lYearDays(i);
@@ -870,7 +814,6 @@
       const cY = calObj.getUTCFullYear();
       const cM = calObj.getUTCMonth() + 1;
       const cD = calObj.getUTCDate();
-
       return solarLunar.solar2lunar(cY, cM, cD);
     }
   };
@@ -889,6 +832,25 @@
       }
     }
     safeCreateIcons();
+
+    function initLockClock() {
+      const lockDateEl = document.getElementById('lock-date');
+      const lockTimeEl = document.getElementById('lock-time');
+      const statusTimeEl = document.getElementById('status-bar-time');
+      
+      const now = new Date();
+      const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+      const month = now.getMonth() + 1;
+      const date = now.getDate();
+      const day = days[now.getDay()];
+      
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      
+      if (lockDateEl) lockDateEl.innerText = `${month}월 ${date}일 ${day}`;
+      if (lockTimeEl) lockTimeEl.innerText = `${hours}:${minutes}`;
+      if (statusTimeEl) statusTimeEl.innerText = `${hours}:${minutes}`;
+    }
 
     let currentStep = 1;
     let selectedFriendForLog = null;
@@ -1077,6 +1039,7 @@
       }
 
       if (stepNum === 1) {
+        initLockClock();
         lockScreen.classList.remove('opacity-0', 'pointer-events-none', 'is-hidden');
         lockScreen.classList.add('is-visible');
         lockScreen.style.zIndex = '60';
@@ -1251,7 +1214,6 @@
       document.getElementById('price-display').innerText = `${parseInt(val).toLocaleString()} 원`;
     }
 
-    /* 🎁 선물 로그 추가 기능 (퀵 추가 & 상세 모달 추가 복원) */
     function quickAddLog(itemName, priceStr) {
       const select = document.getElementById('gift-target-friend');
       const friendId = parseInt(select.value);
@@ -1276,7 +1238,6 @@
       closeDetailModal();
     }
 
-    /* MODAL CONTROLS */
     function openLogModal(friendId) {
       selectedFriendForLog = birthdays.find(b => b.id === friendId);
       if (!selectedFriendForLog) return;
@@ -1383,7 +1344,6 @@
       currentDetailGift = null;
     }
 
-    /* 🎁 1. RAG 정밀 큐레이션 선물 추천 */
     async function recommendGift() {
       const select = document.getElementById('gift-target-friend');
       const friendId = parseInt(select.value);
@@ -1526,42 +1486,53 @@
       }
     }
 
-    /* 💌 2. 자연스러운 AI 맞춤 축하 멘트 생성 함수 (하드코딩 제거) */
-    function normalizeGeneratedText(text) {
-      if (!text) return '';
-      return text
-        .replace(/[\u4E00-\u9FFF\u3400-\u4DBF\u3040-\u30FF\u0600-\u06FF\u0900-\u097F]/g, ' ')
-        .replace(/[A-Za-z]/g, ' ')
-        .replace(/\s{2,}/g, ' ')
+    function cleanAndRefineUserPrompt(rawText, speechVal) {
+      if (!rawText) return '';
+      let text = rawText.trim();
+      const isJondat = speechVal === 'jondat';
+
+      text = text.replace(/[!?.~]+$/g, '').trim();
+
+      text = text
+        .replace(/(?:취업|취직)\s*(?:성공\s*)?(?:축하\s*)?(?:하라고|라고)\s*(?:해줘|전해줘|말해줘|써줘)/gi, isJondat ? "취업 진심으로 축하드리고" : "취업 성공 진짜 축하하고")
+        .replace(/(?:첫\s*직장|회사\s*생활)\s*(?:화이팅|파이팅)\s*(?:하라고|라고)\s*(?:해줘|전해줘|말해줘|써줘)/gi, isJondat ? "첫 직장 생활도 항상 응원하고 파이팅하시길 바라며" : "첫 직장 생활도 파이팅하고 잘 적응하길 바라고")
+        .replace(/(?:바라는\s*일|소원)\s*(?:다\s*잘\s*되라고|이루어지라고)\s*(?:해줘|전해줘|말해줘|써줘)/gi, isJondat ? "올해 바라는 모든 일들 다 잘 풀리시길 바라며" : "올해 바라는 일 전부 술술 잘 풀리길 바라고")
+        .replace(/(?:맛있는\s*거\s*많이\s*먹으라고|맛난\s*거\s*먹으라고)\s*(?:해줘|전해줘|말해줘|써줘)/gi, isJondat ? "오늘 맛있는 음식 많이 드시고" : "오늘 맛있는 거 많이 먹고");
+
+      text = text
+        .replace(/(?:하라고|라고)\s*(?:해줘|전해줘|말해줘|써줘|부탁해|해)$/g, isJondat ? " 항상 응원드려요" : " 항상 응원해")
+        .replace(/(?:전해줘|말해줘|해줘|써줘|부탁해)$/g, '')
         .trim();
+
+      return text;
     }
 
-    function buildFallbackMessage({ speechVal, toneVal, lengthVal, cleanCoreMsg }) {
+    function buildNaturalFallbackMessage({ speechVal, toneVal, lengthVal, refinedPrompt }) {
       const isJondat = speechVal === 'jondat';
       const greeting = isJondat ? '생일 진심으로 축하드려요!' : '생일 진심으로 축하해!';
       
-      let core = cleanCoreMsg || '';
-      if (core) {
-        core = isJondat 
-          ? `${core} 항상 응원하고 좋은 일만 가득하시길 바라요.`
-          : `${core} 올 한 해 바라는 일 다 잘 풀리길 응원할게!`;
+      let bodyText = '';
+      if (refinedPrompt) {
+        bodyText = isJondat 
+          ? `${refinedPrompt}! 오늘 하루 세상에서 가장 행복하고 뜻깊은 시간 보내시길 바라요.`
+          : `${refinedPrompt}! 오늘 하루 세상에서 제일 기분 좋은 날 보내!`;
       } else {
-        core = isJondat
-          ? '오늘 하루 가장 행복하고 따뜻한 시간 보내세요.'
-          : '오늘 맛있는 거 많이 먹고 제일 행복한 하루 보내!';
+        bodyText = isJondat
+          ? '오늘 하루 가장 따뜻하고 행복한 시간 보내시길 바랍니다.'
+          : '오늘 맛있는 거 많이 먹고 행복 가득한 하루 보내!';
       }
 
       const emoji = toneVal === 'plain' ? '' : toneVal === 'cute' ? ' 🍰✨' : toneVal === 'funny' ? ' 🎉🥳' : ' 💌🌿';
 
       if (lengthVal === 'short') {
-        return `${greeting} ${core}${emoji}`;
+        return `${greeting} ${bodyText}${emoji}`;
       } else if (lengthVal === 'long') {
         const closing = isJondat 
-          ? '언제나 건강하시고 뜻깊은 한 해가 되기를 진심으로 바랍니다.'
-          : '늘 든든하게 곁에 있어줘서 고맙고, 오늘만큼은 세상에서 가장 기분 좋은 하루 보내자!';
-        return `${greeting}\n\n${core}\n\n${closing}${emoji}`;
+          ? '올 한 해도 건강하시고 바라는 일 모두 순조롭게 이루어지길 진심으로 응원합니다.'
+          : '올 한 해도 아프지 말고 건강하게, 바라는 일 다 잘 풀리길 항상 응원할게!';
+        return `${greeting}\n\n${bodyText}\n\n${closing}${emoji}`;
       } else {
-        return `${greeting} ${core}${emoji}`;
+        return `${greeting} ${bodyText}${emoji}`;
       }
     }
 
@@ -1586,40 +1557,36 @@
       };
 
       const speechMap = {
-        banmal: "반말 (예: ~해, ~했어, ~하자 등 편안한 어투)",
-        jondat: "존댓말 (예: ~하세요, ~했어요, ~하길 바라요 등 정중한 어투)"
+        banmal: "반말 (예: ~해, ~했어, ~하자 등 편안한 일상 어투)",
+        jondat: "존댓말 (예: ~하세요, ~했어요, ~하길 바라요 등 정중하고 부드러운 어투)"
       };
 
       const toneMap = {
-        plain: "담백하게 (과한 수식어나 오버 없이 일상 카톡처럼 무던하고 깔끔하게, 이모티콘 자제)",
-        cute: "귀엽고 아기자기하게 (다정하고 애교 있는 어투, 이모티콘 1~2개 사용)",
-        funny: "유쾌하고 재치 있게 (경쾌하고 센스 있는 어투)",
-        touching: "진중하고 따뜻하게 (마음을 전하는 차분하고 감동적인 어투)"
+        plain: "담백하게 (과한 이모지나 미사여구 없이 깔끔하고 담백한 일상 카톡 톤)",
+        cute: "귀엽고 아기자기하게 (다정하고 애교 있는 어투, 이모티콘 1~2개)",
+        funny: "유쾌하고 센스 있게 (재치 있고 밝은 어투, 이모티콘 1~2개)",
+        touching: "진중하고 따뜻하게 (마음을 전하는 감동적인 어투, 이모티콘 1개)"
       };
 
       const lengthMap = {
-        short: "1~2문장 이내로 매우 간결하게",
-        medium: "2~3문장 정도로 적당한 분량",
+        short: "1~2문장으로 아주 간결하게",
+        medium: "2~3문장으로 보통 분량으로",
         long: "3~4문장으로 정성스럽고 길게"
       };
 
-      let cleanCoreMsg = rawPrompt
-        .replace(/(?:라고|이라고)\s*(?:전해줘|말해줘|해줘|써줘|부탁해|해)\s*$/g, '')
-        .replace(/(?:전해줘|말해줘|해줘|써줘|부탁해)\s*$/g, '')
-        .trim();
+      const refinedPrompt = cleanAndRefineUserPrompt(rawPrompt, speechVal);
 
       const prompt = `[생일 축하 메시지 생성 요청]
-- 대상과의 관계: ${relMap[relVal] || '친구'}
-- 사용할 말투: ${speechMap[speechVal] || '반말'}
-- 원하는 분위기: ${toneMap[toneVal] || '담백하게'}
-- 분량 가이드: ${lengthMap[lengthVal] || '2~3문장'}
-${cleanCoreMsg ? `- 전달할 핵심 내용: "${cleanCoreMsg}"` : ''}
+- 관계: ${relMap[relVal] || '친구'}
+- 말투: ${speechMap[speechVal] || '반말'}
+- 톤앤매너: ${toneMap[toneVal] || '담백하게'}
+- 분량: ${lengthMap[lengthVal] || '2~3문장'}
+${refinedPrompt ? `- 포함할 내용(자연스러운 축하/응원으로 통합할 것): "${refinedPrompt}"` : ''}
 
 [필수 규칙]
-1. 인위적이거나 딱딱한 템플릿 문장을 쓰지 말고, 실제로 카카오톡 메시지를 보내는 것처럼 매우 자연스러운 한국어 구어체로 작성하세요.
-2. 말투(반말/존댓말)와 분위기를 철저히 지키세요.
-3. 요청 문구(~해줘, ~라고 해줘)가 있다면 실제 건네는 축하/응원 문장으로 스마트하게 치환하세요.
-4. 안내문이나 따옴표 없이 오직 보낼 축하 메시지 본문만 단답형으로 출력하세요.`;
+1. "~하라고 해줘", "~라고 전해줘" 같은 요청 명령형 어투는 문장에 절대 넣지 말고, 내가 상대방에게 건네는 매끄러운 축하·응원 문장으로 완전히 치환하세요.
+2. 부자연스러운 기계식 템플릿이 아닌, 진짜 한국인이 보낸 카카오톡 메시지처럼 읽히는 자연스러운 한국어 구어체로 작성하세요.
+3. 말투(존댓말/반말)와 톤을 엄격히 지키고, 따옴표나 머리말 없이 오직 축하 메시지 본문만 단답형으로 출력하세요.`;
 
       try {
         const resp = await fetch(GEMINI_API_PROXY, {
@@ -1631,11 +1598,15 @@ ${cleanCoreMsg ? `- 전달할 핵심 내용: "${cleanCoreMsg}"` : ''}
         const data = await resp.json();
         if (!resp.ok || !data.text) throw new Error(data.error || 'AI 응답 없음');
 
-        let cleanText = normalizeGeneratedText(data.text);
-        generatedMsgEl.innerText = cleanText || buildFallbackMessage({ speechVal, toneVal, lengthVal, cleanCoreMsg });
+        let cleanText = data.text.trim();
+        if (/(?:하라고|라고)\s*(?:해줘|전해줘|말해줘)/.test(cleanText)) {
+          cleanText = buildNaturalFallbackMessage({ speechVal, toneVal, lengthVal, refinedPrompt });
+        }
+
+        generatedMsgEl.innerText = cleanText || buildNaturalFallbackMessage({ speechVal, toneVal, lengthVal, refinedPrompt });
       } catch (err) {
-        console.warn("AI 멘트 생성 실패, 로컬 자연어 폴백 사용:", err);
-        generatedMsgEl.innerText = buildFallbackMessage({ speechVal, toneVal, lengthVal, cleanCoreMsg });
+        console.warn("AI 멘트 생성 실패 시 자연어 폴백 사용:", err);
+        generatedMsgEl.innerText = buildNaturalFallbackMessage({ speechVal, toneVal, lengthVal, refinedPrompt });
       } finally {
         loadingBox.classList.add('hidden');
         resultBox.classList.remove('hidden');
@@ -1649,6 +1620,8 @@ ${cleanCoreMsg ? `- 전달할 핵심 내용: "${cleanCoreMsg}"` : ''}
       showToast('축하 멘트가 복사되었습니다! ✨');
     }
 
+    initLockClock();
+    setInterval(initLockClock, 30000);
     setStep(1);
     renderBirthdays();
   </script>
