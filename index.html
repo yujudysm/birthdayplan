@@ -1,0 +1,2078 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>생일추카 🎂 - AI 생일 플래너</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Pretendard Font -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .step-active {
+      border-color: #f86075 !important;
+      background-color: #fff5f6 !important;
+      box-shadow: 0 4px 12px rgba(248, 96, 117, 0.15) !important;
+    }
+    .step-active .step-num {
+      background-color: #f86075 !important;
+      color: white !important;
+    }
+    #lock-screen {
+      z-index: 60;
+    }
+    #lock-screen.is-hidden {
+      pointer-events: none;
+    }
+    #lock-screen:not(.is-hidden) {
+      pointer-events: auto;
+    }
+    header, main {
+      position: relative;
+      z-index: 1;
+    }
+    @keyframes subtleGlow {
+      0%, 100% { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3); }
+      50% { box-shadow: 0 12px 30px 2px rgba(248, 96, 117, 0.3); }
+    }
+    .glow-notification { animation: subtleGlow 3s infinite ease-in-out; }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#fff5f6', 100: '#ffebed', 200: '#ffd6db', 300: '#ffb3bd', 400: '#ff8595', 500: '#f86075', 600: '#e04358',
+            },
+            surface: '#faf7f8', demoBg: '#f2ece4', demoCard: '#f9f6f0'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-demoBg min-h-screen flex items-center justify-center p-4 lg:p-10 text-gray-800">
+
+  <!-- Main Wrapper Frame -->
+  <div class="w-full max-w-[1080px] bg-demoCard rounded-[32px] border border-[#e2dacd] p-6 lg:p-10 shadow-xl overflow-hidden relative">
+
+    <!-- Grid Area -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+
+      <!-- LEFT: SmartPhone Frame -->
+      <div class="lg:col-span-5 flex justify-center w-full">
+        <div class="w-[340px] shrink-0 h-[680px] bg-white rounded-[48px] border-[10px] border-[#221c1d] shadow-2xl relative flex flex-col justify-between overflow-hidden">
+          
+          <!-- Status Bar -->
+          <div class="px-6 pt-3 pb-1 flex justify-between items-center text-[10px] font-bold text-gray-800 shrink-0 z-30">
+            <span>09:41</span>
+            <div class="w-16 h-4 bg-[#221c1d] rounded-full mx-auto"></div>
+            <div class="flex items-center gap-1">
+              <i data-lucide="wifi" class="w-3 h-3"></i>
+              <i data-lucide="battery" class="w-3.5 h-3.5"></i>
+            </div>
+          </div>
+
+          <!-- Lock Screen -->
+          <div id="lock-screen" class="absolute inset-0 bg-cover bg-center z-40 flex flex-col justify-between p-6 pt-12 transition-all duration-500" style="background-image: linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0.65)), url('https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=1000&auto=format&fit=crop');">
+            <div class="text-center text-white space-y-1">
+              <p id="lock-date" class="text-xs font-medium opacity-90"></p>
+              <h2 id="lock-time" class="text-5xl font-extrabold tracking-tight"></h2>
+            </div>
+
+            <!-- Push Notification Card -->
+            <div class="bg-white/95 backdrop-blur-md rounded-3xl p-4 text-gray-900 shadow-2xl space-y-3 border border-white/50 glow-notification">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-base">🎂</span>
+                  <span class="text-xs font-bold text-brand-600">생일추카 알림</span>
+                </div>
+                <span class="text-[10px] text-gray-400">방금 전</span>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-gray-900">이수진님의 생일이 3일 남았어요!</p>
+                <p class="text-[11px] text-gray-600 mt-0.5">소중한 선물과 맞춤 축하 멘트를 미리 준비해보세요.</p>
+              </div>
+              <button onclick="unlockApp()" class="w-full py-2.5 bg-brand-500 hover:bg-brand-600 active:scale-[0.98] text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1">
+                <span>같이 축하해주러 갈까요?</span>
+                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Toast Inside Phone -->
+          <div id="toast" class="absolute top-12 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-md text-white text-[11px] px-3.5 py-2 rounded-2xl shadow-xl transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-1.5">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-brand-300"></i>
+            <span id="toast-msg">알림 메시지</span>
+          </div>
+
+          <!-- App Header -->
+          <header class="px-5 pt-3 pb-2 bg-white border-b border-gray-100 shrink-0 z-10 flex items-center justify-between">
+            <div>
+              <p class="text-[9px] font-bold text-brand-400 uppercase">AI Birthday Planner</p>
+              <h1 class="text-lg font-extrabold text-gray-900 flex items-center gap-1">
+                생일추카 <span class="text-sm">🎂</span>
+              </h1>
+            </div>
+            <button class="w-8 h-8 rounded-full bg-brand-50 text-brand-400 flex items-center justify-center">
+              <i data-lucide="bell" class="w-4 h-4"></i>
+            </button>
+          </header>
+
+          <!-- App Navigation Tabs -->
+          <div class="px-5 py-2 bg-white shrink-0 z-10">
+            <div class="grid grid-cols-3 gap-1 bg-gray-100/80 p-1 rounded-xl text-[11px] font-bold text-gray-500">
+              <button onclick="switchTab('dday', 2)" id="tab-dday" class="py-2 rounded-lg bg-white text-gray-900 shadow-sm transition">
+                D-Day
+              </button>
+              <button onclick="switchTab('gift', 3)" id="tab-gift" class="py-2 rounded-lg hover:text-gray-900 transition">
+                선물 추천
+              </button>
+              <button onclick="switchTab('msg', 4)" id="tab-msg" class="py-2 rounded-lg hover:text-gray-900 transition">
+                AI 멘트
+              </button>
+            </div>
+          </div>
+
+          <!-- Scrollable Main Viewport -->
+          <main class="flex-1 overflow-y-auto px-5 py-2 space-y-4 no-scrollbar text-xs relative">
+
+            <!-- 기능 1: 생일 D-Day -->
+            <section id="sec-dday" class="space-y-4">
+              <div class="bg-surface rounded-2xl p-4 border border-gray-100">
+                <h2 id="form-title" class="text-xs font-bold text-gray-900 mb-2.5 flex items-center gap-1">
+                  <i data-lucide="plus-circle" class="w-3.5 h-3.5 text-brand-400"></i> 소중한 생일 추가하기
+                </h2>
+                <form id="birthday-form" onsubmit="addBirthday(event)" class="space-y-2">
+                  <input type="text" id="friend-name" required placeholder="이름 (예: 김민지)" class="w-full px-3 py-2 text-[11px] bg-white rounded-xl border-0 ring-1 ring-gray-200 focus:ring-2 focus:ring-brand-300 focus:outline-none">
+
+                  <!-- 양력/음력 선택 -->
+                  <div class="flex items-center gap-1.5">
+                    <div class="grid grid-cols-2 gap-1 flex-1 p-0.5 bg-gray-100 rounded-xl">
+                      <button type="button" id="cal-type-solar" onclick="setCalendarType('solar')" class="py-1.5 rounded-lg text-[10px] font-bold transition bg-white text-brand-500 shadow-sm">
+                        양력
+                      </button>
+                      <button type="button" id="cal-type-lunar" onclick="setCalendarType('lunar')" class="py-1.5 rounded-lg text-[10px] font-bold transition text-gray-400">
+                        음력
+                      </button>
+                    </div>
+                    <label id="leap-month-wrap" class="hidden items-center gap-1 px-2 py-1.5 bg-gray-50 rounded-lg ring-1 ring-gray-200 shrink-0 cursor-pointer">
+                      <input type="checkbox" id="is-leap-month" class="w-3 h-3 accent-brand-400">
+                      <span class="text-[9px] font-bold text-gray-500 whitespace-nowrap">윤달</span>
+                    </label>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-1.5">
+                    <input type="date" id="friend-date" required class="w-full px-2.5 py-2 text-[11px] bg-white rounded-xl border-0 ring-1 ring-gray-200 text-gray-700">
+                    <select id="notify-days" class="w-full px-2.5 py-2 text-[11px] bg-white rounded-xl border-0 ring-1 ring-gray-200 text-gray-700">
+                      <option value="1">1일 전</option>
+                      <option value="3" selected>3일 전</option>
+                      <option value="7">7일 전</option>
+                    </select>
+                  </div>
+                  <p id="lunar-hint" class="hidden text-[9px] text-gray-400 leading-relaxed">
+                    음력 생일은 위 날짜 선택기에서 <strong class="text-gray-500">음력 연·월·일</strong>을 그대로 골라주세요. (예: 음력 8월 15일이면 8월 15일 선택)
+                  </p>
+                  <button type="submit" class="w-full py-2 bg-gray-900 text-white font-bold text-[11px] rounded-xl shadow-sm">
+                    생일 저장하기
+                  </button>
+                </form>
+              </div>
+
+              <div class="space-y-2">
+                <h3 class="text-[10px] font-bold text-gray-400 uppercase">Upcoming Birthdays</h3>
+                <div id="birthday-list" class="space-y-2"></div>
+              </div>
+            </section>
+
+            <!-- 기능 2: 선물 추천 -->
+            <section id="sec-gift" class="space-y-4 hidden">
+              <div class="bg-surface rounded-2xl p-4 border border-gray-100 space-y-3">
+                <h2 class="text-xs font-bold text-gray-900 flex items-center gap-1">
+                  <i data-lucide="gift" class="w-3.5 h-3.5 text-brand-400"></i> 취향 & 예산 맞춤 추천
+                </h2>
+                <div class="space-y-2">
+                  <div>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1">누구에게 선물할까요?</label>
+                    <select id="gift-target-friend" onchange="onFriendSelectChange()" class="w-full px-3 py-2 text-[11px] bg-white rounded-xl border-0 ring-1 ring-gray-200 text-gray-800 font-bold"></select>
+                  </div>
+
+                  <div id="friend-log-info" class="hidden bg-brand-50/70 p-2.5 rounded-xl text-[10px] text-brand-600 border border-brand-100 flex items-start gap-1.5">
+                    <i data-lucide="info" class="w-3.5 h-3.5 shrink-0 text-brand-400 mt-0.5"></i>
+                    <div>
+                      <span class="font-bold">이전에 준 선물: </span>
+                      <span id="past-logs-text">없음</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label class="block text-[10px] font-bold text-gray-400 mb-1">카테고리</label>
+                    <select id="gift-category" class="w-full px-3 py-2 text-[11px] bg-white rounded-xl border-0 ring-1 ring-gray-200 text-gray-800">
+                      <option value="beauty">뷰티 / 코스메틱 💄</option>
+                      <option value="tech">전자기기 / 테크 🎧</option>
+                      <option value="fashion">패션 / 잡화 👜</option>
+                    </select>
+                  </div>
+
+                  <div class="bg-white p-3 rounded-xl border border-gray-100">
+                    <div class="flex justify-between items-center mb-1">
+                      <span class="text-[11px] font-bold text-gray-700">희망 예산</span>
+                      <span id="price-display" class="text-[11px] font-extrabold text-brand-500 bg-brand-50 px-2 py-0.5 rounded-full">50,000 원</span>
+                    </div>
+                    <input type="range" id="gift-price-slider" min="10000" max="350000" step="5000" value="50000" oninput="updatePriceDisplay(this.value)" class="w-full accent-brand-400 cursor-pointer">
+                  </div>
+
+                  <button onclick="recommendGift()" class="w-full py-2.5 bg-brand-400 hover:bg-brand-500 text-white font-bold text-[11px] rounded-xl shadow-sm flex items-center justify-center gap-1 transition">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> 맞춤 선물 추천받기
+                  </button>
+                </div>
+              </div>
+
+              <!-- 추천 로딩 상태 -->
+              <div id="gift-loading" class="hidden bg-white rounded-2xl p-4 border border-brand-100 text-center space-y-2 shadow-sm">
+                <div class="inline-block animate-spin w-5 h-5 border-2 border-brand-400 border-t-transparent rounded-full"></div>
+                <p class="text-[11px] font-bold text-brand-600">AI가 트렌드와 예산에 맞춰 분석 중입니다...</p>
+              </div>
+
+              <!-- 추천 결과 목록 -->
+              <div id="gift-result" class="hidden space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <h3 class="text-[10px] font-bold text-gray-400">RECOMMENDED ITEMS</h3>
+                  <span id="gift-engine-tag" class="text-[9px] font-bold text-brand-500 bg-brand-50 px-2 py-0.5 rounded-md">Groq 트렌드 AI</span>
+                </div>
+                <div id="gift-items" class="space-y-1.5"></div>
+              </div>
+            </section>
+
+            <!-- 기능 3: AI 축하 멘트 생성기 -->
+            <section id="sec-msg" class="space-y-4 hidden">
+              <div class="bg-surface rounded-2xl p-4 border border-gray-100 space-y-3">
+                <h2 class="text-xs font-bold text-gray-900 flex items-center gap-1">
+                  <i data-lucide="wand-2" class="w-3.5 h-3.5 text-brand-400"></i> AI 맞춤 멘트 생성기
+                </h2>
+                <div class="space-y-2">
+                  <div class="grid grid-cols-3 gap-1">
+                    <div>
+                      <label class="block text-[9px] font-bold text-gray-400 mb-1">관계</label>
+                      <select id="msg-relation" class="w-full px-1.5 py-2 text-[10px] bg-white rounded-xl border-0 ring-1 ring-gray-200 font-bold">
+                        <option value="friend">친구 👭</option>
+                        <option value="family">가족 👨‍👩‍👧‍👦</option>
+                        <option value="senior">선배/직장 👔</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[9px] font-bold text-gray-400 mb-1">말투</label>
+                      <select id="msg-speech" class="w-full px-1.5 py-2 text-[10px] bg-white rounded-xl border-0 ring-1 ring-gray-200 font-bold">
+                        <option value="banmal" selected>반말</option>
+                        <option value="jondat">존댓말</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-[9px] font-bold text-gray-400 mb-1">톤앤매너</label>
+                      <select id="msg-tone" class="w-full px-1.5 py-2 text-[10px] bg-white rounded-xl border-0 ring-1 ring-gray-200 font-bold">
+                        <option value="plain" selected>담백하게 💬</option>
+                        <option value="cute">귀엽게 🍰</option>
+                        <option value="funny">유쾌하게 🤪</option>
+                        <option value="touching">진중하게 💌</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <select id="msg-length" class="w-full px-2.5 py-2 text-[11px] bg-white rounded-xl border-0 ring-1 ring-gray-200">
+                      <option value="short">간결하게</option>
+                      <option value="medium" selected>보통 분량</option>
+                      <option value="long">길고 정성스럽게</option>
+                    </select>
+                  </div>
+                  <div>
+                    <textarea id="msg-custom-prompt" rows="2" placeholder="예: 첫 직장 화이팅 하라고 해줘!" class="w-full p-2.5 text-[11px] bg-white rounded-xl border-0 ring-1 ring-gray-200 resize-none"></textarea>
+                  </div>
+
+                  <button onclick="generateMessageWithRealAI()" class="w-full py-2.5 bg-gray-900 text-white font-bold text-[11px] rounded-xl shadow-sm flex items-center justify-center gap-1">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5 text-brand-300"></i> AI 멘트 생성하기
+                  </button>
+                </div>
+              </div>
+
+              <!-- AI 로딩 연출 -->
+              <div id="msg-loading" class="hidden bg-white rounded-2xl p-4 border border-brand-100 text-center space-y-2 shadow-sm">
+                <div class="inline-block animate-spin w-5 h-5 border-2 border-brand-400 border-t-transparent rounded-full"></div>
+                <p class="text-[11px] font-bold text-brand-600">AI가 톤과 맥락에 맞춰 축하글을 작성 중입니다...</p>
+              </div>
+
+              <!-- AI 결과창 -->
+              <div id="msg-result" class="hidden bg-brand-50/60 rounded-2xl p-3.5 border border-brand-100 space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold text-brand-600">완성된 AI 맞춤 멘트</span>
+                  <button onclick="copyMsg()" class="text-[10px] bg-white text-gray-800 px-2 py-1 rounded-full font-bold shadow-sm flex items-center gap-1 border border-brand-200">
+                    <i data-lucide="copy" class="w-3 h-3"></i> 복사하기
+                  </button>
+                </div>
+                <p id="generated-msg" class="text-[11px] text-gray-800 leading-relaxed bg-white/80 p-3 rounded-xl border border-brand-100/50 whitespace-pre-wrap"></p>
+              </div>
+            </section>
+
+          </main>
+
+          <!-- 🎁 MODAL 1: 선물 기록 모달 -->
+          <div id="log-modal" class="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white w-full max-w-[280px] rounded-2xl p-4 space-y-3 shadow-2xl">
+              <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-xs font-bold text-gray-900 flex items-center gap-1">
+                  🎁 <span id="modal-friend-name">이수진</span>님의 선물 기록
+                </h3>
+                <button onclick="closeLogModal()" class="text-gray-400 hover:text-gray-600">
+                  <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+              </div>
+
+              <div id="modal-log-list" class="space-y-1.5 max-h-36 overflow-y-auto no-scrollbar"></div>
+
+              <form onsubmit="addGiftLog(event)" class="space-y-1.5 pt-2 border-t">
+                <p class="text-[9px] font-bold text-gray-500">새 선물 기록 추가</p>
+                <input type="text" id="new-log-item" required placeholder="선물 이름 (예: 틴트)" class="w-full px-2 py-1 text-[10px] bg-gray-50 rounded-lg border border-gray-200">
+                <div class="grid grid-cols-2 gap-1">
+                  <input type="text" id="new-log-price" placeholder="가격" class="w-full px-2 py-1 text-[10px] bg-gray-50 rounded-lg border border-gray-200">
+                  <input type="date" id="new-log-date" required class="w-full px-1.5 py-1 text-[9px] bg-gray-50 rounded-lg border border-gray-200">
+                </div>
+                <button type="submit" class="w-full py-1.5 bg-brand-500 hover:bg-brand-600 text-white font-bold text-[10px] rounded-xl shadow-sm">
+                  기록 저장
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- 🛍️ MODAL 2: 추천 상품 상세 모달 -->
+          <div id="detail-modal" class="absolute inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+            <div class="bg-white w-full max-w-[280px] rounded-2xl p-4 space-y-3 shadow-2xl">
+              <div class="flex justify-between items-center border-b pb-2">
+                <h3 class="text-xs font-bold text-gray-900 flex items-center gap-1">
+                  🔍 추천 상품 상세 정보
+                </h3>
+                <button onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-600">
+                  <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+              </div>
+
+              <div class="text-center space-y-1 py-1">
+                <div id="detail-icon" class="text-3xl">💄</div>
+                <div>
+                  <h4 id="detail-title" class="text-xs font-extrabold text-gray-900">샤넬 루쥬 코코 밤</h4>
+                  <p id="detail-price" class="text-[11px] font-bold text-brand-500 mt-0.5">약 48,000원</p>
+                </div>
+                <p id="detail-desc" class="text-[10px] text-gray-500 leading-relaxed bg-brand-50/50 p-2 rounded-xl border border-brand-100">
+                  고급스러운 인디 핑크 보습 립밤. 부담 없이 선물하기 좋습니다.
+                </p>
+              </div>
+
+              <div class="space-y-1 border-t pt-2">
+                <p class="text-[9px] font-bold text-gray-400">비슷한 추천 상품 더보기</p>
+                <div id="detail-related-list" class="space-y-1"></div>
+              </div>
+
+              <button onclick="closeDetailModal()" class="w-full py-1.5 bg-gray-900 text-white font-bold text-[10px] rounded-xl">
+                확인 완료
+              </button>
+            </div>
+          </div>
+
+          <footer class="text-center py-2 border-t border-gray-100 shrink-0 bg-white">
+            <p class="text-[9px] text-gray-400">Happy Birthday Planner App</p>
+          </footer>
+
+        </div>
+      </div>
+
+      <!-- RIGHT: PR Section -->
+      <div class="lg:col-span-7 space-y-5">
+        <div class="space-y-3 border-b border-[#e2dacd] pb-5">
+          <div class="inline-flex items-center gap-2 bg-[#f0e4d8] text-brand-600 text-xs px-3.5 py-1.5 rounded-full font-extrabold">
+            <span class="w-2 h-2 rounded-full bg-brand-500 animate-ping"></span>
+            <span>시연용 인터랙티브 HTML</span>
+          </div>
+
+          <h2 class="text-3xl lg:text-4xl font-black text-gray-900 leading-[1.25] tracking-tight">
+            소중한 사람의 특별한 하루,<br/>
+            <span class="text-brand-500">더 이상 숙제가 되지 않도록.</span>
+          </h2>
+
+          <p class="text-xs lg:text-sm text-gray-600 leading-relaxed pt-1">
+            챙겨야 할 생일은 늘어가고 선물 고르느라 고민하던 당신을 위해.<br/>과거 선물 기록부터 취향 맞춤 추천까지, 당신의 정성에 센스를 더해드립니다.
+          </p>
+        </div>
+
+        <div class="space-y-2.5">
+          <div id="step-card-1" onclick="setStep(1)" class="step-card step-active bg-white p-4 rounded-2xl border border-gray-200 transition cursor-pointer flex items-start gap-3.5 hover:border-brand-300 shadow-sm">
+            <span class="step-num w-6 h-6 rounded-full bg-gray-900 text-white text-xs font-bold flex items-center justify-center shrink-0">1</span>
+            <div>
+              <h4 class="text-xs font-bold text-gray-900">잠금화면 푸시 알림 노출</h4>
+              <p class="text-[11px] text-gray-500 mt-0.5">D-n일 전 스마트폰 화면에 생일 푸시 알림이 나타납니다.</p>
+            </div>
+          </div>
+
+          <div id="step-card-2" onclick="setStep(2)" class="step-card bg-white p-4 rounded-2xl border border-gray-200 transition cursor-pointer flex items-start gap-3.5 hover:border-brand-300 shadow-sm">
+            <span class="step-num w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs font-bold flex items-center justify-center shrink-0">2</span>
+            <div>
+              <h4 class="text-xs font-bold text-gray-900">D-Day 관리 & 선물 히스토리 로그</h4>
+              <p class="text-[11px] text-gray-500 mt-0.5">소중한 생일을 관리하고 이전에 주고받은 선물을 기록합니다.</p>
+            </div>
+          </div>
+
+          <div id="step-card-3" onclick="setStep(3)" class="step-card bg-white p-4 rounded-2xl border border-gray-200 transition cursor-pointer flex items-start gap-3.5 hover:border-brand-300 shadow-sm">
+            <span class="step-num w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs font-bold flex items-center justify-center shrink-0">3</span>
+            <div>
+              <h4 class="text-xs font-bold text-gray-900">과거 로그 제외 맞춤 선물 추천</h4>
+              <p class="text-[11px] text-gray-500 mt-0.5">선물이 중복되지 않고 예산에 맞춰 추천받습니다.</p>
+            </div>
+          </div>
+
+          <div id="step-card-4" onclick="setStep(4)" class="step-card bg-white p-4 rounded-2xl border border-gray-200 transition cursor-pointer flex items-start gap-3.5 hover:border-brand-300 shadow-sm">
+            <span class="step-num w-6 h-6 rounded-full bg-gray-200 text-gray-700 text-xs font-bold flex items-center justify-center shrink-0">4</span>
+            <div>
+              <h4 class="text-xs font-bold text-gray-900">AI 맞춤 축하 멘트</h4>
+              <p class="text-[11px] text-gray-500 mt-0.5">상황별 선호에 따라 자연스러운 축하 문장을 생성합니다.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-1">
+          <button onclick="setStep(2)" class="py-3.5 bg-gray-900 hover:bg-black active:scale-[0.98] text-white font-bold text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-1.5">
+            <i data-lucide="play" class="w-4 h-4 fill-white"></i>
+            <span>시연 시작</span>
+          </button>
+          <button onclick="resetDemo()" class="py-3.5 bg-white hover:bg-gray-100 active:scale-[0.98] text-gray-800 font-bold text-xs rounded-2xl border border-gray-200 shadow-sm transition flex items-center justify-center gap-1.5">
+            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+            <span>초기화</span>
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Solar/Lunar Calendar Conversion (embedded locally, no external CDN) -->
+  <script>
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+  typeof define === 'function' && define.amd ? define(['exports'], factory) :
+  (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.solarLunar = {}));
+})(this, (function (exports) { 'use strict';
+
+  /**
+   * 农历 1900-2100 的润大小信息表
+   * @return Array
+   */
+  var lunarInfo = [0x04bd8, 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2,//1900-1909
+    0x04ae0, 0x0a5b6, 0x0a4d0, 0x0d250, 0x1d255, 0x0b540, 0x0d6a0, 0x0ada2, 0x095b0, 0x14977,//1910-1919
+    0x04970, 0x0a4b0, 0x0b4b5, 0x06a50, 0x06d40, 0x1ab54, 0x02b60, 0x09570, 0x052f2, 0x04970,//1920-1929
+    0x06566, 0x0d4a0, 0x0ea50, 0x06e95, 0x05ad0, 0x02b60, 0x186e3, 0x092e0, 0x1c8d7, 0x0c950,//1930-1939
+    0x0d4a0, 0x1d8a6, 0x0b550, 0x056a0, 0x1a5b4, 0x025d0, 0x092d0, 0x0d2b2, 0x0a950, 0x0b557,//1940-1949
+    0x06ca0, 0x0b550, 0x15355, 0x04da0, 0x0a5b0, 0x14573, 0x052b0, 0x0a9a8, 0x0e950, 0x06aa0,//1950-1959
+    0x0aea6, 0x0ab50, 0x04b60, 0x0aae4, 0x0a570, 0x05260, 0x0f263, 0x0d950, 0x05b57, 0x056a0,//1960-1969
+    0x096d0, 0x04dd5, 0x04ad0, 0x0a4d0, 0x0d4d4, 0x0d250, 0x0d558, 0x0b540, 0x0b6a0, 0x195a6,//1970-1979
+    0x095b0, 0x049b0, 0x0a974, 0x0a4b0, 0x0b27a, 0x06a50, 0x06d40, 0x0af46, 0x0ab60, 0x09570,//1980-1989
+    0x04af5, 0x04970, 0x064b0, 0x074a3, 0x0ea50, 0x06b58, 0x05ac0, 0x0ab60, 0x096d5, 0x092e0,//1990-1999
+    0x0c960, 0x0d954, 0x0d4a0, 0x0da50, 0x07552, 0x056a0, 0x0abb7, 0x025d0, 0x092d0, 0x0cab5,//2000-2009
+    0x0a950, 0x0b4a0, 0x0baa4, 0x0ad50, 0x055d9, 0x04ba0, 0x0a5b0, 0x15176, 0x052b0, 0x0a930,//2010-2019
+    0x07954, 0x06aa0, 0x0ad50, 0x05b52, 0x04b60, 0x0a6e6, 0x0a4e0, 0x0d260, 0x0ea65, 0x0d530,//2020-2029
+    0x05aa0, 0x076a3, 0x096d0, 0x04afb, 0x04ad0, 0x0a4d0, 0x1d0b6, 0x0d250, 0x0d520, 0x0dd45,//2030-2039
+    0x0b5a0, 0x056d0, 0x055b2, 0x049b0, 0x0a577, 0x0a4b0, 0x0aa50, 0x1b255, 0x06d20, 0x0ada0,//2040-2049
+    /**Add By JJonline@JJonline.Cn**/
+    0x14b63, 0x09370, 0x049f8, 0x04970, 0x064b0, 0x168a6, 0x0ea50, 0x06b20, 0x1a6c4, 0x0aae0,//2050-2059
+    0x092e0, 0x0d2e3, 0x0c960, 0x0d557, 0x0d4a0, 0x0da50, 0x05d55, 0x056a0, 0x0a6d0, 0x055d4,//2060-2069
+    0x052d0, 0x0a9b8, 0x0a950, 0x0b4a0, 0x0b6a6, 0x0ad50, 0x055a0, 0x0aba4, 0x0a5b0, 0x052b0,//2070-2079
+    0x0b273, 0x06930, 0x07337, 0x06aa0, 0x0ad50, 0x14b55, 0x04b60, 0x0a570, 0x054e4, 0x0d160,//2080-2089
+    0x0e968, 0x0d520, 0x0daa0, 0x16aa6, 0x056d0, 0x04ae0, 0x0a9d4, 0x0a4d0, 0x0d150, 0x0f252,//2090-2099
+    0x0d520];//2100;
+
+  /**
+   * 公历每个月份的天数普通表
+   * @Array Of Property
+   * @return Number
+   */
+  var solarMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+  /**
+   * 天干地支之天干速查表
+   * @Array Of Property trans['甲','乙','丙','丁','戊','己','庚','辛','壬','癸']
+   * @return Cn string
+   */
+  var gan = [
+    '\u7532',
+    '\u4e59',
+    '\u4e19',
+    '\u4e01',
+    '\u620a',
+    '\u5df1',
+    '\u5e9a',
+    '\u8f9b',
+    '\u58ec',
+    '\u7678'
+  ];
+
+  /**
+   * 天干地支之地支速查表
+   * @Array Of Property
+   * @trans['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥']
+   * @return Cn string
+   */
+  var zhi = [
+    '\u5b50',
+    '\u4e11',
+    '\u5bc5',
+    '\u536f',
+    '\u8fb0',
+    '\u5df3',
+    '\u5348',
+    '\u672a',
+    '\u7533',
+    '\u9149',
+    '\u620c',
+    '\u4ea5'
+  ];
+
+  /**
+   * 天干地支之地支速查表<=>生肖
+   * @Array Of Property
+   * @trans['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪']
+   * @return Cn string
+   */
+  var animals = [
+    '\u9f20',
+    '\u725b',
+    '\u864e',
+    '\u5154',
+    '\u9f99',
+    '\u86c7',
+    '\u9a6c',
+    '\u7f8a',
+    '\u7334',
+    '\u9e21',
+    '\u72d7',
+    '\u732a'
+  ];
+
+  /**
+   * 24节气速查表
+   * @Array Of Property
+   * @trans['小寒','大寒','立春','雨水','惊蛰','春分','清明','谷雨','立夏','小满','芒种','夏至','小暑','大暑','立秋','处暑','白露','秋分','寒露','霜降','立冬','小雪','大雪','冬至']
+   * @return Cn string
+   */
+  var lunarTerm = [
+    '\u5c0f\u5bd2', '\u5927\u5bd2', '\u7acb\u6625', '\u96e8\u6c34', '\u60ca\u86f0', '\u6625\u5206', '\u6e05\u660e', '\u8c37\u96e8', '\u7acb\u590f', '\u5c0f\u6ee1', '\u8292\u79cd', '\u590f\u81f3', '\u5c0f\u6691', '\u5927\u6691', '\u7acb\u79cb', '\u5904\u6691', '\u767d\u9732', '\u79cb\u5206', '\u5bd2\u9732', '\u971c\u964d', '\u7acb\u51ac', '\u5c0f\u96ea', '\u5927\u96ea', '\u51ac\u81f3'
+  ];
+
+  /**
+   * 1900-2100各年的24节气日期速查表
+   * @Array Of Property
+   * @return 0x string For splice
+   */
+  var lTermInfo = [
+    '9778397bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e', '97bcf97c3598082c95f8c965cc920f',
+    '97bd0b06bdb0722c965ce1cfcc920f', 'b027097bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e',
+    '97bcf97c359801ec95f8c965cc920f', '97bd0b06bdb0722c965ce1cfcc920f', 'b027097bd097c36b0b6fc9274c91aa',
+    '97b6b97bd19801ec9210c965cc920e', '97bcf97c359801ec95f8c965cc920f', '97bd0b06bdb0722c965ce1cfcc920f',
+    'b027097bd097c36b0b6fc9274c91aa', '9778397bd19801ec9210c965cc920e', '97b6b97bd19801ec95f8c965cc920f',
+    '97bd09801d98082c95f8e1cfcc920f', '97bd097bd097c36b0b6fc9210c8dc2', '9778397bd197c36c9210c9274c91aa',
+    '97b6b97bd19801ec95f8c965cc920e', '97bd09801d98082c95f8e1cfcc920f', '97bd097bd097c36b0b6fc9210c8dc2',
+    '9778397bd097c36c9210c9274c91aa', '97b6b97bd19801ec95f8c965cc920e', '97bcf97c3598082c95f8e1cfcc920f',
+    '97bd097bd097c36b0b6fc9210c8dc2', '9778397bd097c36c9210c9274c91aa', '97b6b97bd19801ec9210c965cc920e',
+    '97bcf97c3598082c95f8c965cc920f', '97bd097bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa',
+    '97b6b97bd19801ec9210c965cc920e', '97bcf97c3598082c95f8c965cc920f', '97bd097bd097c35b0b6fc920fb0722',
+    '9778397bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e', '97bcf97c359801ec95f8c965cc920f',
+    '97bd097bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e',
+    '97bcf97c359801ec95f8c965cc920f', '97bd097bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa',
+    '97b6b97bd19801ec9210c965cc920e', '97bcf97c359801ec95f8c965cc920f', '97bd097bd07f595b0b6fc920fb0722',
+    '9778397bd097c36b0b6fc9210c8dc2', '9778397bd19801ec9210c9274c920e', '97b6b97bd19801ec95f8c965cc920f',
+    '97bd07f5307f595b0b0bc920fb0722', '7f0e397bd097c36b0b6fc9210c8dc2', '9778397bd097c36c9210c9274c920e',
+    '97b6b97bd19801ec95f8c965cc920f', '97bd07f5307f595b0b0bc920fb0722', '7f0e397bd097c36b0b6fc9210c8dc2',
+    '9778397bd097c36c9210c9274c91aa', '97b6b97bd19801ec9210c965cc920e', '97bd07f1487f595b0b0bc920fb0722',
+    '7f0e397bd097c36b0b6fc9210c8dc2', '9778397bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e',
+    '97bcf7f1487f595b0b0bb0b6fb0722', '7f0e397bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa',
+    '97b6b97bd19801ec9210c965cc920e', '97bcf7f1487f595b0b0bb0b6fb0722', '7f0e397bd097c35b0b6fc920fb0722',
+    '9778397bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e', '97bcf7f1487f531b0b0bb0b6fb0722',
+    '7f0e397bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa', '97b6b97bd19801ec9210c965cc920e',
+    '97bcf7f1487f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa',
+    '97b6b97bd19801ec9210c9274c920e', '97bcf7f0e47f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b0bc920fb0722',
+    '9778397bd097c36b0b6fc9210c91aa', '97b6b97bd197c36c9210c9274c920e', '97bcf7f0e47f531b0b0bb0b6fb0722',
+    '7f0e397bd07f595b0b0bc920fb0722', '9778397bd097c36b0b6fc9210c8dc2', '9778397bd097c36c9210c9274c920e',
+    '97b6b7f0e47f531b0723b0b6fb0722', '7f0e37f5307f595b0b0bc920fb0722', '7f0e397bd097c36b0b6fc9210c8dc2',
+    '9778397bd097c36b0b70c9274c91aa', '97b6b7f0e47f531b0723b0b6fb0721', '7f0e37f1487f595b0b0bb0b6fb0722',
+    '7f0e397bd097c35b0b6fc9210c8dc2', '9778397bd097c36b0b6fc9274c91aa', '97b6b7f0e47f531b0723b0b6fb0721',
+    '7f0e27f1487f595b0b0bb0b6fb0722', '7f0e397bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa',
+    '97b6b7f0e47f531b0723b0b6fb0721', '7f0e27f1487f531b0b0bb0b6fb0722', '7f0e397bd097c35b0b6fc920fb0722',
+    '9778397bd097c36b0b6fc9274c91aa', '97b6b7f0e47f531b0723b0b6fb0721', '7f0e27f1487f531b0b0bb0b6fb0722',
+    '7f0e397bd097c35b0b6fc920fb0722', '9778397bd097c36b0b6fc9274c91aa', '97b6b7f0e47f531b0723b0b6fb0721',
+    '7f0e27f1487f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b0bc920fb0722', '9778397bd097c36b0b6fc9274c91aa',
+    '97b6b7f0e47f531b0723b0787b0721', '7f0e27f0e47f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b0bc920fb0722',
+    '9778397bd097c36b0b6fc9210c91aa', '97b6b7f0e47f149b0723b0787b0721', '7f0e27f0e47f531b0723b0b6fb0722',
+    '7f0e397bd07f595b0b0bc920fb0722', '9778397bd097c36b0b6fc9210c8dc2', '977837f0e37f149b0723b0787b0721',
+    '7f07e7f0e47f531b0723b0b6fb0722', '7f0e37f5307f595b0b0bc920fb0722', '7f0e397bd097c35b0b6fc9210c8dc2',
+    '977837f0e37f14998082b0787b0721', '7f07e7f0e47f531b0723b0b6fb0721', '7f0e37f1487f595b0b0bb0b6fb0722',
+    '7f0e397bd097c35b0b6fc9210c8dc2', '977837f0e37f14998082b0787b06bd', '7f07e7f0e47f531b0723b0b6fb0721',
+    '7f0e27f1487f531b0b0bb0b6fb0722', '7f0e397bd097c35b0b6fc920fb0722', '977837f0e37f14998082b0787b06bd',
+    '7f07e7f0e47f531b0723b0b6fb0721', '7f0e27f1487f531b0b0bb0b6fb0722', '7f0e397bd097c35b0b6fc920fb0722',
+    '977837f0e37f14998082b0787b06bd', '7f07e7f0e47f531b0723b0b6fb0721', '7f0e27f1487f531b0b0bb0b6fb0722',
+    '7f0e397bd07f595b0b0bc920fb0722', '977837f0e37f14998082b0787b06bd', '7f07e7f0e47f531b0723b0b6fb0721',
+    '7f0e27f1487f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b0bc920fb0722', '977837f0e37f14998082b0787b06bd',
+    '7f07e7f0e47f149b0723b0787b0721', '7f0e27f0e47f531b0b0bb0b6fb0722', '7f0e397bd07f595b0b0bc920fb0722',
+    '977837f0e37f14998082b0723b06bd', '7f07e7f0e37f149b0723b0787b0721', '7f0e27f0e47f531b0723b0b6fb0722',
+    '7f0e397bd07f595b0b0bc920fb0722', '977837f0e37f14898082b0723b02d5', '7ec967f0e37f14998082b0787b0721',
+    '7f07e7f0e47f531b0723b0b6fb0722', '7f0e37f1487f595b0b0bb0b6fb0722', '7f0e37f0e37f14898082b0723b02d5',
+    '7ec967f0e37f14998082b0787b0721', '7f07e7f0e47f531b0723b0b6fb0722', '7f0e37f1487f531b0b0bb0b6fb0722',
+    '7f0e37f0e37f14898082b0723b02d5', '7ec967f0e37f14998082b0787b06bd', '7f07e7f0e47f531b0723b0b6fb0721',
+    '7f0e37f1487f531b0b0bb0b6fb0722', '7f0e37f0e37f14898082b072297c35', '7ec967f0e37f14998082b0787b06bd',
+    '7f07e7f0e47f531b0723b0b6fb0721', '7f0e27f1487f531b0b0bb0b6fb0722', '7f0e37f0e37f14898082b072297c35',
+    '7ec967f0e37f14998082b0787b06bd', '7f07e7f0e47f531b0723b0b6fb0721', '7f0e27f1487f531b0b0bb0b6fb0722',
+    '7f0e37f0e366aa89801eb072297c35', '7ec967f0e37f14998082b0787b06bd', '7f07e7f0e47f149b0723b0787b0721',
+    '7f0e27f1487f531b0b0bb0b6fb0722', '7f0e37f0e366aa89801eb072297c35', '7ec967f0e37f14998082b0723b06bd',
+    '7f07e7f0e47f149b0723b0787b0721', '7f0e27f0e47f531b0723b0b6fb0722', '7f0e37f0e366aa89801eb072297c35',
+    '7ec967f0e37f14998082b0723b06bd', '7f07e7f0e37f14998083b0787b0721', '7f0e27f0e47f531b0723b0b6fb0722',
+    '7f0e37f0e366aa89801eb072297c35', '7ec967f0e37f14898082b0723b02d5', '7f07e7f0e37f14998082b0787b0721',
+    '7f07e7f0e47f531b0723b0b6fb0722', '7f0e36665b66aa89801e9808297c35', '665f67f0e37f14898082b0723b02d5',
+    '7ec967f0e37f14998082b0787b0721', '7f07e7f0e47f531b0723b0b6fb0722', '7f0e36665b66a449801e9808297c35',
+    '665f67f0e37f14898082b0723b02d5', '7ec967f0e37f14998082b0787b06bd', '7f07e7f0e47f531b0723b0b6fb0721',
+    '7f0e36665b66a449801e9808297c35', '665f67f0e37f14898082b072297c35', '7ec967f0e37f14998082b0787b06bd',
+    '7f07e7f0e47f531b0723b0b6fb0721', '7f0e26665b66a449801e9808297c35', '665f67f0e37f1489801eb072297c35',
+    '7ec967f0e37f14998082b0787b06bd', '7f07e7f0e47f531b0723b0b6fb0721', '7f0e27f1487f531b0b0bb0b6fb0722'
+  ];
+
+  /**
+   * 数字转中文速查表
+   * @Array Of Property
+   * @trans ['日','一','二','三','四','五','六','七','八','九','十']
+   * @return Cn string
+   */
+  var nStr1 = [
+    '\u65e5',
+    '\u4e00',
+    '\u4e8c',
+    '\u4e09',
+    '\u56db',
+    '\u4e94',
+    '\u516d',
+    '\u4e03',
+    '\u516b',
+    '\u4e5d',
+    '\u5341'
+  ];
+
+  /**
+   * 日期转农历称呼速查表
+   * @Array Of Property
+   * @trans ['初','十','廿','卅']
+   * @return Cn string
+   */
+  var nStr2 = ['\u521d', '\u5341', '\u5eff', '\u5345'];
+
+  /**
+   * 月份转农历称呼速查表
+   * @Array Of Property
+   * @trans ['正','一','二','三','四','五','六','七','八','九','十','冬','腊']
+   * @return Cn string
+   */
+  var nStr3 = [
+    '\u6b63',
+    '\u4e8c',
+    '\u4e09',
+    '\u56db',
+    '\u4e94',
+    '\u516d',
+    '\u4e03',
+    '\u516b',
+    '\u4e5d',
+    '\u5341',
+    '\u51ac',
+    '\u814a'
+  ];
+
+  /**
+   * 年份数字转中文速查表
+   * @Array Of Property
+   * @trans ['零','一','二','三','四','五','六','七','八','九','十']
+   * @return Cn string
+   */
+  var nStr4 = [
+    '\u96f6',
+    '\u4e00',
+    '\u4e8c',
+    '\u4e09',
+    '\u56db',
+    '\u4e94',
+    '\u516d',
+    '\u4e03',
+    '\u516b',
+    '\u4e5d',
+    '\u5341'
+  ];
+
+  /**
+   * @1900-2100区间内的公历、农历互转
+   * @charset  UTF-8
+   * @author  Ajing(JJonline@JJonline.Cn), Modernized by OpenCode
+   * @Time  2014-7-21
+   * @Version  $ID$
+   * @公历转农历：solarLunar.solar2lunar(1987,11,01); //[you can ignore params of prefix 0]
+   * @农历转公历：solarLunar.lunar2solar(1987,09,10); //[you can ignore params of prefix 0]
+   * @link http://blog.jjonline.cn/userInterFace/173.html
+   */
+
+
+  const solarLunar = {
+    lunarInfo,
+    solarMonth,
+    gan,
+    zhi,
+    animals,
+    lunarTerm,
+    lTermInfo,
+    nStr1,
+    nStr2,
+    nStr3,
+    nStr4,
+
+    /**
+     * 返回农历y年一整年的总天数
+     * @param {number} y - lunar Year
+     * @returns {number}
+     * @eg:var count = solarLunar.lYearDays(1987) ;//count=387
+     */
+    lYearDays(y) {
+      let sum = 348;
+      const info = lunarInfo[y - 1900];
+      // 优化：直接计算位数，减少循环
+      sum += info & 0x8000 ? 1 : 0;
+      sum += info & 0x4000 ? 1 : 0;
+      sum += info & 0x2000 ? 1 : 0;
+      sum += info & 0x1000 ? 1 : 0;
+      sum += info & 0x0800 ? 1 : 0;
+      sum += info & 0x0400 ? 1 : 0;
+      sum += info & 0x0200 ? 1 : 0;
+      sum += info & 0x0100 ? 1 : 0;
+      sum += info & 0x0080 ? 1 : 0;
+      sum += info & 0x0040 ? 1 : 0;
+      sum += info & 0x0020 ? 1 : 0;
+      sum += info & 0x0010 ? 1 : 0;
+      return sum + solarLunar.leapDays(y);
+    },
+
+    /**
+     * 返回农历y年闰月是哪个月；若y年没有闰月 则返回0
+     * @param {number} y - lunar Year
+     * @returns {number} (0-12)
+     * @eg:var leapMonth = solarLunar.leapMonth(1987) ;//leapMonth=6
+     */
+    leapMonth(y) {
+      //闰字编码 \u95f0
+      return lunarInfo[y - 1900] & 0xf;
+    },
+
+    /**
+     * 返回农历y年闰月的天数 若该年没有闰月则返回0
+     * @param {number} y - lunar Year
+     * @returns {number} (0、29、30)
+     * @eg:var leapMonthDay = solarLunar.leapDays(1987) ;//leapMonthDay=29
+     */
+    leapDays(y) {
+      if (solarLunar.leapMonth(y)) {
+        return lunarInfo[y - 1900] & 0x10000 ? 30 : 29;
+      }
+      return 0;
+    },
+
+    /**
+     * 返回农历 y 年 m 月（非闰月）的总天数，计算 m 为闰月时的天数请使用 leapDays 方法
+     * @param {number} y - lunar Year
+     * @param {number} m - lunar Month
+     * @returns {number} (-1、29、30)
+     * @eg:var MonthDay = solarLunar.monthDays(1987,9) ;//MonthDay=29
+     */
+    monthDays(y, m) {
+      if (m > 12 || m < 1) {
+        return -1;
+      } //月份参数从1至12，参数错误返回-1
+      return lunarInfo[y - 1900] & (0x10000 >> m) ? 30 : 29;
+    },
+
+    /**
+     * 获取时辰干支
+     * @param {number} h - 公历小时 (0-23)
+     * @param {number} dayGanIndex - 日干索引 (0-9)，0=甲，1=乙，...，9=癸
+     * @returns {string} 时辰干支，如 "甲子"
+     * @eg:var shichen = solarLunar.getShiChen(23, 0); // 23:00 的子时，日干为甲时
+     */
+    getShiChen(h, dayGanIndex) {
+      const hourZhiIndex = (h + 1) / 2 >= 24 ? 0 : Math.floor((h + 1) / 2) % 12;
+      const hourGanIndex = (dayGanIndex * 2 + hourZhiIndex) % 10;
+      return gan[hourGanIndex] + zhi[hourZhiIndex];
+    },
+
+    /**
+     * 返回公历(!)y年m月的天数
+     * @param {number} y - solar Year
+     * @param {number} m - solar Month
+     * @returns {number} (-1、28、29、30、31)
+     * @eg:var solarMonthDay = solarLunar.solarDays(1987) ;//solarMonthDay=30
+     */
+    solarDays(y, m) {
+      if (m > 12 || m < 1) {
+        return -1;
+      } //若参数错误 返回-1
+      const ms = m - 1;
+      if (ms === 1) {
+        //2月份的闰平规律测算后确认返回28或29
+        return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0 ? 29 : 28;
+      } else {
+        return solarMonth[ms];
+      }
+    },
+
+    /**
+     * 传入offset偏移量返回干支
+     * @param {number} offset - 相对甲子的偏移量
+     * @returns {string} Cn string
+     */
+    toGanZhi(offset) {
+      return gan[offset % 10] + zhi[offset % 12];
+    },
+
+    /**
+     * 传入公历(!) y 年获得该年第 n 个节气的公历日期
+     * @param {number} y - 公历年(1900-2100)；n二十四节气中的第几个节气(1~24)；从n=1(小寒)算起
+     * @param {number} n - 二十四节气中的第几个节气(1~24)
+     * @returns {number}
+     * @eg:var _24 = solarLunar.getTerm(1987,3) ;//_24=4;意即1987年2月4日立春
+     */
+    getTerm(y, n) {
+      if (y < 1900 || y > 2100) {
+        return -1;
+      }
+      if (n < 1 || n > 24) {
+        return -1;
+      }
+      const _table = lTermInfo[y - 1900];
+      const _info = [
+        parseInt('0x' + _table.substr(0, 5)).toString(),
+        parseInt('0x' + _table.substr(5, 5)).toString(),
+        parseInt('0x' + _table.substr(10, 5)).toString(),
+        parseInt('0x' + _table.substr(15, 5)).toString(),
+        parseInt('0x' + _table.substr(20, 5)).toString(),
+        parseInt('0x' + _table.substr(25, 5)).toString(),
+      ];
+      const _calDay = [
+        _info[0].substr(0, 1),
+        _info[0].substr(1, 2),
+        _info[0].substr(3, 1),
+        _info[0].substr(4, 2),
+
+        _info[1].substr(0, 1),
+        _info[1].substr(1, 2),
+        _info[1].substr(3, 1),
+        _info[1].substr(4, 2),
+
+        _info[2].substr(0, 1),
+        _info[2].substr(1, 2),
+        _info[2].substr(3, 1),
+        _info[2].substr(4, 2),
+
+        _info[3].substr(0, 1),
+        _info[3].substr(1, 2),
+        _info[3].substr(3, 1),
+        _info[3].substr(4, 2),
+
+        _info[4].substr(0, 1),
+        _info[4].substr(1, 2),
+        _info[4].substr(3, 1),
+        _info[4].substr(4, 2),
+
+        _info[5].substr(0, 1),
+        _info[5].substr(1, 2),
+        _info[5].substr(3, 1),
+        _info[5].substr(4, 2),
+      ];
+      return parseInt(_calDay[n - 1]);
+    },
+
+    /**
+     * 传入农历年份数字返回汉语通俗表示法
+     * @param {number} y - lunar year
+     * @returns {string}
+     * @eg:
+     */
+    toChinaYear(y) {
+      //年 => \u5E74
+      const oxxx = Math.floor(y / 1000);
+      const xoxx = Math.floor((y % 1000) / 100);
+      const xxox = Math.floor((y % 100) / 10);
+      const xxxo = y % 10;
+
+      return nStr4[oxxx] + nStr4[xoxx] + nStr4[xxox] + nStr4[xxxo] + '\u5E74';
+    },
+
+    /**
+     * 传入农历数字月份返回汉语通俗表示法
+     * @param {number} m - lunar month
+     * @returns {string}
+     * @eg:var cnMonth = solarLunar.toChinaMonth(12) ;//cnMonth='腊月'
+     */
+    toChinaMonth(m) {
+      // 月 => \u6708
+      if (m > 12 || m < 1) {
+        return -1;
+      } //若参数错误 返回-1
+      let s = nStr3[m - 1];
+      s += '\u6708'; //加上月字
+      return s;
+    },
+
+    /**
+     * 传入农历日期数字返回汉字表示法
+     * @param {number} d - lunar day
+     * @returns {string} Cn string
+     * @eg:var cnDay = solarLunar.toChinaDay(21) ;//cnMonth='廿一'
+     */
+    toChinaDay(d) {
+      //日 => \u65e5
+      let s = '';
+      switch (d) {
+      case 10:
+        s = '\u521d\u5341';
+        break;
+      case 20:
+        s = '\u4e8c\u5341';
+        break;
+      case 30:
+        s = '\u4e09\u5341';
+        break;
+      default:
+        s = nStr2[Math.floor(d / 10)];
+        s += nStr1[d % 10];
+      }
+      return s;
+    },
+
+    /**
+     * 年份转生肖 => 精确划分生肖分界线是"立春"
+     * @param {number} y - year
+     * @param {number} [m] - month (可选，用于精确计算)
+     * @param {number} [d] - day (可选，用于精确计算)
+     * @returns {string} Cn string
+     * @eg:var animal = solarLunar.getAnimal(1987) ;//animal='兔'
+     */
+    getAnimal(y, m, d) {
+      // 如果提供了月日参数，基于立春进行精确计算
+      if (m !== undefined && d !== undefined) {
+        const term3 = solarLunar.getTerm(y, 3); // 立春日期
+        // 如果日期在立春之前，则生肖按上一年计算
+        if (m < 2 || (m === 2 && d < term3)) {
+          y = y - 1;
+        }
+      }
+      return animals[(y - 4) % 12];
+    },
+
+    /**
+     * 传入公历年月日获得详细的公历、农历object信息 <=>JSON
+     * @param {number} y - solar year
+     * @param {number} m - solar month
+     * @param {number} d - solar day
+     * @returns {object} JSON object
+     * @eg:console.log(solarLunar.solar2lunar(1987,11,01));
+     */
+    solar2lunar(y, m, d) {
+      //参数区间1900.1.31~2100.12.31
+      // 输入验证
+      if (y == null || m == null || d == null) {
+        const objDate = new Date();
+        y = objDate.getFullYear();
+        m = objDate.getMonth() + 1;
+        d = objDate.getDate();
+      }
+
+      // 类型转换和验证
+      y = Number(y);
+      m = Number(m);
+      d = Number(d);
+
+      if (isNaN(y) || isNaN(m) || isNaN(d)) {
+        return -1;
+      }
+
+      if (y < 1900 || y > 2100) {
+        return -1;
+      } //年份限定、上限
+      if (y === 1900 && m === 1 && d < 31) {
+        return -1;
+      } //下限
+
+      // 验证月份和日期的有效性
+      if (m < 1 || m > 12) {
+        return -1;
+      }
+      const maxDay = solarLunar.solarDays(y, m);
+      if (d < 1 || d > maxDay) {
+        return -1;
+      }
+
+      const objDate = new Date(y, parseInt(m) - 1, d);
+      let i,
+        temp = 0;
+      //修正ymd参数
+      y = objDate.getFullYear();
+      m = objDate.getMonth() + 1;
+      d = objDate.getDate();
+      let offset =
+        (Date.UTC(objDate.getFullYear(), objDate.getMonth(), objDate.getDate()) -
+          Date.UTC(1900, 0, 31)) /
+        86400000;
+
+      // 使用原有的线性搜索算法以保持兼容性，但修复变量重声明问题
+      temp = 0;
+      for (i = 1900; i < 2101 && offset > 0; i++) {
+        temp = solarLunar.lYearDays(i);
+        offset -= temp;
+      }
+      if (offset < 0) {
+        offset += temp;
+        i--;
+      }
+
+      const finalYear = i;
+
+      //是否今天
+      const isTodayObj = new Date();
+      let isToday = false;
+      if (
+        isTodayObj.getFullYear() === y &&
+        isTodayObj.getMonth() + 1 === m &&
+        isTodayObj.getDate() === d
+      ) {
+        isToday = true;
+      }
+      //星期几
+      const nWeek = objDate.getDay();
+      const cWeek = nStr1[nWeek];
+      const nWeekAdjusted = nWeek === 0 ? 7 : nWeek; //数字表示周几顺应天朝周一开始的惯例
+
+      //农历年
+      const year = finalYear;
+
+      const leapMonth = solarLunar.leapMonth(finalYear); //闰哪个月
+
+      let isLeap = false;
+
+      //效验闰月
+      for (i = 1; i < 13 && offset > 0; i++) {
+        //闰月
+        if (leapMonth > 0 && i === leapMonth + 1 && isLeap === false) {
+          --i;
+          isLeap = true;
+          temp = solarLunar.leapDays(year); //计算农历闰月天数
+        } else {
+          temp = solarLunar.monthDays(year, i); //计算农历普通月天数
+        }
+        //解除闰月
+        if (isLeap === true && i === leapMonth + 1) {
+          isLeap = false;
+        }
+        offset -= temp;
+      }
+
+      if (offset === 0 && leapMonth > 0 && i === leapMonth + 1) {
+        if (isLeap) {
+          isLeap = false;
+        } else {
+          isLeap = true;
+          --i;
+        }
+      }
+      if (offset < 0) {
+        offset += temp;
+        --i;
+      }
+      //农历月
+      const month = i;
+      //农历日
+      const day = offset + 1;
+
+      //天干地支处理
+      // 注意：干支年以立春为分界线，这是中国传统历法
+      // 立春通常在2月3-5日之间，立春之前出生的人，干支属上一年
+      const sm = m - 1;
+      const term3 = solarLunar.getTerm(y, 3); //该公历年立春日期
+      let gzY = solarLunar.toGanZhi(y - 4); //普通按年份计算，下方尚需按立春节气来修正
+      //依据立春日进行修正gzY
+      // 立春通常在2月3-5日之间，如果日期早于立春，应按上一年计算
+      if (m < 2 || (m === 2 && d < term3)) {
+        gzY = solarLunar.toGanZhi(y - 1 - 4);
+      }
+
+      //月柱 1900年1月小寒以前为 丙子月(60进制12)
+      const firstNode = solarLunar.getTerm(y, m * 2 - 1); //返回当月「节」为几日开始
+      const secondNode = solarLunar.getTerm(y, m * 2); //返回当月「节」为几日开始
+
+      //依据12节气修正干支月
+      // 使用原始的正确算法：年干支索引*12 + 月份 + 偏移
+      let gzM = solarLunar.toGanZhi((y - 1900) * 12 + m + 11);
+      if (d >= firstNode) {
+        gzM = solarLunar.toGanZhi((y - 1900) * 12 + m + 12);
+      }
+
+      //传入的日期的节气与否
+      let isTerm = false;
+      let term = '';
+      if (firstNode === d) {
+        isTerm = true;
+        term = lunarTerm[m * 2 - 2];
+      }
+      if (secondNode === d) {
+        isTerm = true;
+        term = lunarTerm[m * 2 - 1];
+      }
+      //日柱 当月一日与 1900/1/1 相差天数
+      const dayCyclical = Date.UTC(y, sm, 1, 0, 0, 0, 0) / 86400000 + 25567 + 10;
+      const gzD = solarLunar.toGanZhi(dayCyclical + d - 1);
+      return {
+        lYear: year,
+        lMonth: month,
+        lDay: day,
+        animal: solarLunar.getAnimal(year),
+        yearCn: solarLunar.toChinaYear(year),
+        monthCn: (isLeap && leapMonth === month ? '\u95f0' : '') + solarLunar.toChinaMonth(month),
+        dayCn: solarLunar.toChinaDay(day),
+        cYear: y,
+        cMonth: m,
+        cDay: d,
+        gzYear: gzY,
+        gzMonth: gzM,
+        gzDay: gzD,
+        isToday,
+        isLeap,
+        nWeek: nWeekAdjusted, //数字表示周几顺应天朝周一开始的惯例
+        ncWeek: '\u661f\u671f' + cWeek,
+        isTerm,
+        term,
+      };
+    },
+
+    /**
+     * 传入公历年月日以及传入的月份是否闰月获得详细的公历、农历object信息 <=>JSON
+     * @param {number} y - lunar year
+     * @param {number} m - lunar month
+     * @param {number} d - lunar day
+     * @param {boolean} isLeapMonth - lunar month is leap or not.
+     * @returns {object} JSON object
+     * @eg:console.log(solarLunar.lunar2solar(1987,9,10));
+     */
+    lunar2solar(y, m, d, isLeapMonth) {
+      //参数区间1900.1.31~2100.12.1
+      // 输入验证
+      y = Number(y);
+      m = Number(m);
+      d = Number(d);
+      isLeapMonth = Boolean(isLeapMonth); // 确保是布尔值
+
+      if (isNaN(y) || isNaN(m) || isNaN(d)) {
+        return -1;
+      }
+      const leapMonth = solarLunar.leapMonth(y);
+      if (isLeapMonth && leapMonth !== m) {
+        return -1;
+      } //传参要求计算该闰月公历 但该年得出的闰月与传参的月份并不同
+      if ((y === 2100 && m === 12 && d > 1) || (y === 1900 && m === 1 && d < 31)) {
+        return -1;
+      } //超出了最大极限值
+      const day = solarLunar.monthDays(y, m);
+      if (y < 1900 || y > 2100 || d > day) {
+        return -1;
+      } //参数合法性效验
+
+      //计算农历的时间差
+      let offset = 0;
+      for (let i = 1900; i < y; i++) {
+        offset += solarLunar.lYearDays(i);
+      }
+      let leap = 0,
+        isAdd = false;
+      for (let i = 1; i < m; i++) {
+        leap = solarLunar.leapMonth(y);
+        if (!isAdd) {
+          //处理闰月
+          if (leap <= i && leap > 0) {
+            offset += solarLunar.leapDays(y);
+            isAdd = true;
+          }
+        }
+        offset += solarLunar.monthDays(y, i);
+      }
+      //转换闰月农历 需补充该年闰月的前一个月的时差
+      if (isLeapMonth) {
+        offset += day;
+      }
+      //1900年农历正月一日的公历时间为1900年1月30日0时0分0秒(该时间也是本农历的最开始起始点)
+      const stmap = Date.UTC(1900, 1, 30, 0, 0, 0);
+      const calObj = new Date((offset + d - 31) * 86400000 + stmap);
+      const cY = calObj.getUTCFullYear();
+      const cM = calObj.getUTCMonth() + 1;
+      const cD = calObj.getUTCDate();
+
+      return solarLunar.solar2lunar(cY, cM, cD);
+    },
+
+    /**
+     * 获取指定日期的传统节日
+     * @param {number} year - 公历年
+     * @param {number} month - 公历月
+     * @param {number} day - 公历日
+     * @returns {string[]} 传统节日数组
+     */
+    getFestivals(year, month, day) {
+      const festivals = [];
+      const lunar = solarLunar.solar2lunar(year, month, day);
+      if (lunar === -1) return festivals;
+
+      const { lMonth, lDay } = lunar;
+
+      const fixedFestivals = {
+        '1-1': '春节',
+        '1-15': '元宵节',
+        '5-5': '端午节',
+        '7-7': '七夕节',
+        '8-15': '中秋节',
+        '9-9': '重阳节',
+        '12-8': '腊八节',
+        '12-23': '小年',
+      };
+
+      const key = `${lMonth}-${lDay}`;
+      if (fixedFestivals[key]) {
+        festivals.push(fixedFestivals[key]);
+      }
+
+      if (lMonth === 1 && lDay === 1) {
+        festivals.push('农历新年');
+      }
+
+      if (solarLunar.customFestivals) {
+        solarLunar.customFestivals.forEach((f) => {
+          if (f.month === lMonth && f.day === lDay) {
+            festivals.push(f.name);
+          }
+        });
+      }
+
+      return festivals;
+    },
+
+    /**
+     * 添加自定义农历节日
+     * @param {string} name - 节日名称
+     * @param {number} month - 农历月
+     * @param {number} day - 农历日
+     */
+    addFestival(name, month, day) {
+      if (!solarLunar.customFestivals) {
+        solarLunar.customFestivals = [];
+      }
+      solarLunar.customFestivals.push({ name, month, day });
+    },
+
+    /**
+     * 清除所有自定义节日
+     */
+    clearFestivals() {
+      solarLunar.customFestivals = [];
+    },
+  };
+
+  exports.default = solarLunar;
+
+  Object.defineProperty(exports, '__esModule', { value: true });
+
+}));
+//# sourceMappingURL=solarlunar.min.js.map
+
+  </script>
+
+  <script>
+    const GEMINI_API_PROXY = '/.netlify/functions/gemini';
+
+    function safeCreateIcons() {
+      if (typeof lucide !== 'undefined' && lucide.createIcons) {
+        lucide.createIcons();
+      }
+    }
+    safeCreateIcons();
+
+    let currentStep = 1;
+    let selectedFriendForLog = null;
+    let currentGiftPool = [];
+    let currentCalendarType = 'solar';
+
+    // 🌙 solarlunar 라이브러리 참조 정규화 (UMD 빌드가 .default 아래에 API를 두는 경우 대응)
+    const SL = (typeof solarLunar !== 'undefined') ? (solarLunar.default || solarLunar) : null;
+
+    let birthdays = [
+      { 
+        id: 1, 
+        name: "이수진", 
+        date: "2008-08-15", 
+        calendarType: 'solar',
+        isLeapMonth: false,
+        notify: 3,
+        logs: [{ id: 101, item: "디올 틴트", price: "48,000원", date: "2025-08-15" }]
+      },
+      { 
+        id: 2, 
+        name: "박지민", 
+        date: "2006-08-28", 
+        calendarType: 'solar',
+        isLeapMonth: false,
+        notify: 7,
+        logs: []
+      }
+    ];
+
+    // 🌙 양력/음력 토글 UI 전환
+    function setCalendarType(type) {
+      currentCalendarType = type;
+      const solarBtn = document.getElementById('cal-type-solar');
+      const lunarBtn = document.getElementById('cal-type-lunar');
+      const leapWrap = document.getElementById('leap-month-wrap');
+      const lunarHint = document.getElementById('lunar-hint');
+
+      if (type === 'solar') {
+        solarBtn.classList.add('bg-white', 'text-brand-500', 'shadow-sm');
+        solarBtn.classList.remove('text-gray-400');
+        lunarBtn.classList.remove('bg-white', 'text-brand-500', 'shadow-sm');
+        lunarBtn.classList.add('text-gray-400');
+        leapWrap.classList.add('hidden');
+        leapWrap.classList.remove('flex');
+        lunarHint.classList.add('hidden');
+        document.getElementById('is-leap-month').checked = false;
+      } else {
+        lunarBtn.classList.add('bg-white', 'text-brand-500', 'shadow-sm');
+        lunarBtn.classList.remove('text-gray-400');
+        solarBtn.classList.remove('bg-white', 'text-brand-500', 'shadow-sm');
+        solarBtn.classList.add('text-gray-400');
+        leapWrap.classList.remove('hidden');
+        leapWrap.classList.add('flex');
+        lunarHint.classList.remove('hidden');
+      }
+    }
+
+    // 🌙 음력 생일을 기준 연도의 실제 양력 날짜(Date)로 변환
+    // year: 기준으로 삼을 연도 (해당 연도에 윤달이 없으면 평달로 자동 대체)
+    function lunarBirthdayToSolarDate(item, year) {
+      try {
+        const [, m, d] = item.date.split('-').map(Number);
+        const lMonth = m;
+        const lDay = d;
+        let result = SL.lunar2solar(year, lMonth, lDay, !!item.isLeapMonth);
+        // 해당 연도에 윤달이 없거나 변환이 실패하면 평달 날짜로 대체
+        if (!result || result.cYear === undefined) {
+          result = SL.lunar2solar(year, lMonth, lDay, false);
+        }
+        if (!result || result.cYear === undefined) return null;
+        return new Date(result.cYear, result.cMonth - 1, result.cDay);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // 🎂 다가오는 다음 생일의 양력 날짜를 반환 (양력/음력 공통)
+    function getNextOccurrenceDate(item) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (item.calendarType === 'lunar' && SL) {
+        let candidate = lunarBirthdayToSolarDate(item, today.getFullYear());
+        if (candidate && candidate < today) {
+          candidate = lunarBirthdayToSolarDate(item, today.getFullYear() + 1);
+        }
+        if (candidate) return candidate;
+      }
+
+      // 양력이거나 변환 실패 시 폴백
+      const target = new Date(item.date);
+      target.setFullYear(today.getFullYear());
+      target.setHours(0, 0, 0, 0);
+      if (target < today) target.setFullYear(today.getFullYear() + 1);
+      return target;
+    }
+
+    /* 🎁 1만 원부터 35만 원까지 공백 없는 실존 인기 선물 DB (총 75종) */
+    const giftDatabase = [
+      // 💄 [뷰티 / 코스메틱 / 스킨케어 / 향수] (25종)
+      { id: 101, cat: 'beauty', name: '바세린 립테라피 컬러앤케어 립밤 듀오', price: 12000, icon: '💄', desc: '부담 없이 선물하기 좋은 촉촉한 국민 보습 립밤' },
+      { id: 102, cat: 'beauty', name: '버츠비 비즈왁스 & 틴티드 립밤 기프트 세트', price: 15000, icon: '💄', desc: '자연스러운 생기와 입술 보습을 챙겨주는 올리브영 스테디셀러' },
+      { id: 103, cat: 'beauty', name: '토리든 다이브인 저분자 히알루론산 수분 립 에센스 듀오', price: 18000, icon: '🧴', desc: '끈적임 없는 고수분 밀착 케어로 인기 높은 20대 필수템' },
+      { id: 104, cat: 'beauty', name: '닥터지 레드 블레미쉬 클리어 수딩 크림 기획세트', price: 22000, icon: '🧴', desc: '민감한 피부를 순하게 진정시키는 수분 진정 크림' },
+      { id: 105, cat: 'beauty', name: '이니스프리 그린티 씨드 히알루론산 세럼 세트', price: 25000, icon: '🧴', desc: '산뜻하고 맑은 피부를 위한 데일리 수분 기초' },
+      { id: 106, cat: 'beauty', name: '논픽션 핸드크림 50ml (상탈크림/가이악플라워)', price: 25000, icon: '🧴', desc: '감각적인 시그니처 향과 세련된 패키징의 베스트셀러' },
+      { id: 107, cat: 'beauty', name: '탬버린즈 에그 립밤 (로즈우디/언센티드)', price: 28900, icon: '💄', desc: '유니크한 달걀 오브제 패키지의 트렌디한 감성 선물' },
+      { id: 108, cat: 'beauty', name: '논픽션 핸드크림 & 립밤 듀오 기프트 세트', price: 34000, icon: '🧴', desc: '카카오톡 선물하기 20대 선호도 최상위 힐링 세트' },
+      { id: 109, cat: 'beauty', name: '라네즈 립 슬리핑 마스크 & 립 글로이 밤 듀오', price: 36000, icon: '💄', desc: '밤낮으로 입술 각질과 보습을 완벽 케어하는 인기템' },
+      { id: 110, cat: 'beauty', name: '탬버린즈 쉘 퍼퓸 핸드크림 30ml (CHAMO/FEY9)', price: 38000, icon: '🌸', desc: '향수처럼 오래 남는 감각적인 시그니처 퍼퓸 핸드크림' },
+      { id: 111, cat: 'beauty', name: '탬버린즈 에그 퍼퓸 핸드크림 40ml (PUMKINI)', price: 42000, icon: '🌸', desc: '포근하고 스위트한 향이 매력적인 화제의 신상 핸드밤' },
+      { id: 112, cat: 'beauty', name: '이솝 레저렉션 아로마틱 핸드밤 75ml', price: 43000, icon: '🧴', desc: '은은한 시트러스 허브 아로마의 클래식 프리미엄 핸드크림' },
+      { id: 113, cat: 'beauty', name: '샤넬 루쥬 코코 밤 (립케어 립스틱)', price: 48000, icon: '💄', desc: '맑고 투명한 발색과 고급스러운 보습감을 주는 샤넬 립' },
+      { id: 114, cat: 'beauty', name: '디올 어딕트 립 글로우 (국민 립밤)', price: 49000, icon: '💄', desc: '생기 있는 입술을 완성하는 백화점 뷰티 1위 립밤' },
+      { id: 115, cat: 'beauty', name: '입생로랑 따뚜아쥬 꾸뛰르 벨벳 틴트', price: 58000, icon: '💋', desc: '선명한 발색과 가벼운 벨벳 텍스처의 럭셔리 틴트' },
+      { id: 116, cat: 'beauty', name: '이솝 레저렉션 아로마틱 핸드케어 듀오 (워시+밤)', price: 79000, icon: '🧴', desc: '욕실 공간의 품격을 높여주는 호불호 없는 아로마 듀오' },
+      { id: 117, cat: 'beauty', name: '달바 화이트 트러플 프리미엄 3종 스킨케어 세트', price: 95000, icon: '🧴', desc: '항산화 광채와 탄력을 선사하는 프리미엄 비건 스킨케어' },
+      { id: 118, cat: 'beauty', name: '조말론 런던 잉글리쉬 페어 앤 프리지아 코롱 30ml', price: 115000, icon: '🌸', desc: '신선하고 은은한 과일 꽃향의 대표 니치 향수' },
+      { id: 119, cat: 'beauty', name: '설화수 자음 2종 기획 세트 (스킨/에멀젼)', price: 140000, icon: '🧴', desc: '부모님/어르신 생신 선물 부동의 1위 대표 효도 기초 세트' },
+      { id: 120, cat: 'beauty', name: '후 비첩 순환 에센스 스페셜 기획 에디션', price: 165000, icon: '🌸', desc: '맑고 투명한 피부를 가꿔주는 럭셔리 궁중 안티에이징' },
+      { id: 121, cat: 'beauty', name: '샤넬 샹스 오 타늘 오 드 뚜왈렛 50ml', price: 189000, icon: '🌸', desc: '사랑스럽고 부드러운 플로럴 프루티 시그니처 향수' },
+      { id: 122, cat: 'beauty', name: '조말론 라임 바질 앤 만다린 코롱 100ml', price: 218000, icon: '🌸', desc: '싱그럽고 청량한 잔향을 선사하는 대용량 니치 향수' },
+      { id: 123, cat: 'beauty', name: '에스티로더 갈색병 나이트 리페어 75ml 점보 세트', price: 245000, icon: '🧴', desc: '피부 탄력과 리페어를 책임지는 글로벌 1위 안티에이징 세럼' },
+      { id: 124, cat: 'beauty', name: '설화수 자음생크림 클래식 60ml 세트', price: 270000, icon: '🧴', desc: '고농축 인삼 펩타이드로 팽팽한 탄력을 채우는 고영양 크림' },
+      { id: 125, cat: 'beauty', name: '딥티크 오 드 퍼퓸 플레르 드 뽀 75ml', price: 289000, icon: '🌸', desc: '살결 같은 은은하고 포근한 머스크 향의 워너비 니치 향수' },
+      { id: 126, cat: 'beauty', name: '이니스프리 립밤', price: 9000, icon: '💄', desc: '부담 없이 선물하기 좋은 데일리 립밤' },
+      { id: 127, cat: 'beauty',name: "무인양품 산뜻정화 토너",price: 9900,icon: "🧴",desc: "부담 없이 선물하기 좋은 데일리 스킨케어 아이템"},
+      { id: 128, cat: 'beauty',name: "무인양품 산뜻정화 스킨",price: 9900,icon: "🧴",desc: "매일 사용할 수 있어 실용적인 선물"},
+      { id: 129, cat: 'beauty', name: '롬앤 글래스팅 멜팅 밤', price: 9900, icon: '💄', desc: '데일리로 부담 없이 사용하기 좋은 촉촉한 립 메이크업 제품' },
+      { id: 130, cat: 'beauty', name: '라운드랩 자작나무 수분 크림 20ml', price: 9000, icon: '🧴', desc: '가볍게 사용할 수 있어 선물하기 좋은 촉촉한 보습 아이템' },
+
+      // 🎧 [테크 / 디지털 / 소형가전 / 헬스케어] (25종)
+      { id: 201, cat: 'tech', name: '신지모루 맥세이프 핑거링 폰스트랩 거치대', price: 12900, icon: '📱', desc: '한 손 조작과 편리한 거치를 돕는 가성비 데일리 템' },
+      { id: 202, cat: 'tech', name: '앤커(Anker) 고속 충전 C타입 보조배터리 5000mAh', price: 19800, icon: '🔋', desc: '초경량 미니 사이즈로 가방에 쏙 들어가는 일체형 보조배터리' },
+      { id: 203, cat: 'tech', name: '로지텍 페블 M350 무소음 블루투스 마우스', price: 24900, icon: '🖱️', desc: '조용한 도서관/카페에서도 편안한 슬림 무소음 마우스' },
+      { id: 204, cat: 'tech', name: '신지모루 맥세이프 3in1 고속 무선충전기 거치대', price: 29800, icon: '⚡', desc: '스마트폰/워치/이어폰을 깔끔하게 동시 충전하는 데스크 템' },
+      { id: 205, cat: 'tech', name: '로지텍 K380 멀티 디바이스 무선 키보드', price: 39000, icon: '⌨️', desc: '태블릿과 노트북 어디서나 쓰기 좋은 슬림 멀티페어링 키보드' },
+      { id: 206, cat: 'tech', name: '샤오미 미밴드 8 스마트 밴드', price: 49800, icon: '⌚', desc: '가벼운 착용감과 수면/걸음수 건강 트래킹 스마트 밴드' },
+      { id: 207, cat: 'tech', name: '카카오프렌즈 무선 무드등 가습기', price: 55000, icon: '💡', desc: '탁상 위를 촉촉하고 아늑하게 밝혀주는 힐링 무드 가전' },
+      { id: 208, cat: 'tech', name: '로지텍 페블 2 무선 키보드 & 마우스 세트', price: 65000, icon: '⌨️', desc: '감각적인 파스텔 컬러와 조용한 타건감의 데스크 세트' },
+      { id: 209, cat: 'tech', name: '오므론 자동 전자 혈압계 (팔뚝형)', price: 79000, icon: '💓', desc: '어르신들이 집에서 손쉽게 혈압을 측정하는 정밀 헬스케어' },
+      { id: 210, cat: 'tech', name: 'JBL Clip 4 휴대용 클립형 블루투스 스피커', price: 89000, icon: '🔊', desc: '어디든 걸 수 있는 클립과 방수 기능을 갖춘 아웃도어 스피커' },
+      { id: 211, cat: 'tech', name: '오랄비 PRO 500 전동칫솔 세트', price: 99000, icon: '🪥', desc: '정밀한 세정력으로 구강 건강을 책임지는 실용적인 전동칫솔' },
+      { id: 212, cat: 'tech', name: '풀리오 목 어깨 무선 온열 마사지기', price: 119000, icon: '💆', desc: '강력한 주무름 손맛과 온열 힐링을 선사하는 대세 마사지기' },
+      { id: 213, cat: 'tech', name: '인스탁스 미니 12 폴라로이드 즉석카메라 패키지', price: 139000, icon: '📷', desc: '소중한 추억을 그 자리에서 인화하는 아날로그 감성 카메라' },
+      { id: 214, cat: 'tech', name: '보스 사운드링크 마이크로 블루투스 스피커', price: 159000, icon: '🔊', desc: '손바닥만 한 크기에서 뿜어져 나오는 단단한 프리미엄 저음' },
+      { id: 215, cat: 'tech', name: '소니 노이즈캔슬링 무선 헤드폰 WH-CH720N', price: 169000, icon: '🎧', desc: '깃털처럼 가벼운 착용감과 고성능 ANC를 갖춘 헤드폰' },
+      { id: 216, cat: 'tech', name: '풀리오 종아리 마사지기 V2 듀얼 세트', price: 198000, icon: '💆', desc: '다리 부기와 뭉친 근육을 강력한 공기압으로 풀어주는 힐링템' },
+      { id: 217, cat: 'tech', name: '보스 사운드링크 플렉스 블루투스 스피커 II', price: 229000, icon: '🔊', desc: '풍부하고 선명한 사운드를 자랑하는 고음질 아웃도어 스피커' },
+      { id: 218, cat: 'tech', name: '마샬 엠버튼 II 포터블 블루투스 스피커', price: 249000, icon: '🔊', desc: '클래식 감성 디자인과 360도 입체 음향의 인테리어 스피커' },
+      { id: 219, cat: 'tech', name: '애플워치 SE 2세대 GPS 40mm', price: 279000, icon: '⌚', desc: '아이폰과 완벽하게 연동되는 최고의 스마트 라이프 디바이스' },
+      { id: 220, cat: 'tech', name: '소니 프리미엄 노이즈캔슬링 이어폰 WF-1000XM5', price: 299000, icon: '🎧', desc: '세계 최고 수준의 노이즈 캔슬링과 무손실 하이엔드 사운드' },
+      { id: 221, cat: 'tech', name: '마샬 액톤 III 블루투스 홈 스피커', price: 319000, icon: '🔊', desc: '거실과 방 전체를 채우는 묵직하고 따뜻한 프리미엄 사운드' },
+      { id: 222, cat: 'tech', name: '애플 에어팟 프로 2세대 USB-C', price: 349000, icon: '🎧', desc: '적응형 오디오와 완벽한 노이즈 캔슬링의 완성형 테크 아이템' },
+      { id: 223, cat: 'tech', name: '소니 프리미엄 노이즈캔슬링 헤드폰 WH-1000XM5', price: 399000, icon: '🎧', desc: '압도적인 정적 속에서 즐기는 최상급 하이파이 헤드폰' },
+      { id: 224, cat: 'tech', name: '애플워치 시리즈 9 GPS 41mm', price: 449000, icon: '⌚', desc: '더블 탭 제스처와 정밀한 건강 모니터링의 플래그십 워치' },
+      { id: 225, cat: 'tech', name: '보스 QC 울트라 노이즈캔슬링 무선 헤드폰', price: 479000, icon: '🎧', desc: '공간 음향 몰입감과 극강의 편안한 착용감을 주는 프리미엄 헤드폰' },
+      { id: 226, cat: 'tech', name: '삼성전자 USB Type-C 케이블', price: 9900, icon: '🔌', desc: '매일 사용하는 충전 케이블이라 실용적인 선물로 주기 좋은 아이템' },
+      { id: 227, cat: 'tech', name: '아이리버 블루투스 무선 마우스', price: 9900, icon: '🖱️', desc: '학교나 회사에서 유용하게 사용할 수 있는 실용적인 데일리 아이템' },
+      { id: 228, cat: 'tech', name: '오아 무드 미니 가습기', price: 9900, icon: '💡', desc: '책상이나 침대 옆에 두고 사용하기 좋은 아담한 생활 가전' },
+
+      // 👜 [패션 / 라이프 / 건강식품 / 잡화] (25종)
+      { id: 301, cat: 'fashion', name: '스타벅스 e카드 교환권 & 디저트 머그 세트', price: 15000, icon: '☕', desc: '누구나 기분 좋게 즐기는 부담 없는 실속형 커피 선물' },
+      { id: 302, cat: 'fashion', name: '카카오프렌즈 페이스 봉제 인형 키링', price: 18000, icon: '🧸', desc: '가방에 걸어 귀여운 포인트를 주는 20대 인기 백참' },
+      { id: 303, cat: 'fashion', name: '배스킨라빈스 달콤한 케이크 모바일 교환권', price: 26000, icon: '🎂', desc: '생일 파티 분위기를 한껏 돋워주는 달콤한 아이스크림 케이크' },
+      { id: 304, cat: 'fashion', name: '마뗑킴 로고 코인 지갑 키링', price: 38000, icon: '👛', desc: '가방 꾸미기와 카드/동전 수납이 동시에 되는 트렌드 아이템' },
+      { id: 305, cat: 'fashion', name: '이미스(EMIS) 시그니처 로고 볼캡', price: 42000, icon: '🧢', desc: '예쁜 색감과 완벽한 핏으로 데일리 코디에 최고인 볼캡' },
+      { id: 306, cat: 'fashion', name: '오설록 프리미엄 티 컬렉션 9종 세트', price: 55000, icon: '🍵', desc: '남녀노소 향긋하고 품격 있게 마시는 고급 블렌디드 티' },
+      { id: 307, cat: 'fashion', name: '폴로 랄프로렌 클래식 포니 자수 양말 3팩 세트', price: 65000, icon: '🧦', desc: '깔끔하고 클래식한 디자인의 고급 데일리 코튼 삭스' },
+      { id: 308, cat: 'fashion', name: '정관장 활기력 30병 세트', price: 79000, icon: '🍯', desc: '바쁜 일상에 간편하게 기력을 채워주는 앰플형 프리미엄 홍삼' },
+      { id: 309, cat: 'fashion', name: '질스튜어트 뉴욕 천연 가죽 하트 레터링 카드지갑', price: 89000, icon: '👛', desc: '슬림한 크기와 사랑스러운 하트 참 포인트의 소가죽 지갑' },
+      { id: 310, cat: 'fashion', name: '정관장 홍삼정 에브리타임 30포', price: 102000, icon: '🍯', desc: '스틱형으로 휴대하기 좋은 부모님/친구 대표 면역력 선물' },
+      { id: 311, cat: 'fashion', name: '메종키츠네 폭스헤드 캔버스 토트백', price: 110000, icon: '👜', desc: '가볍고 튼튼한 캔버스 소재의 감성 데일리 에코백' },
+      { id: 312, cat: 'fashion', name: '아페쎄(A.P.C.) 로고 데님 에코백', price: 135000, icon: '👜', desc: '미니멀한 브랜드 로고가 돋보이는 캐주얼 데일리 백' },
+      { id: 313, cat: 'fashion', name: '메트로시티 천연 소가죽 슬림 반지갑', price: 155000, icon: '👛', desc: '고급스러운 가죽 질감과 우아한 실루엣의 실용적인 지갑' },
+      { id: 314, cat: 'fashion', name: '닥스 실크 체크 자카드 숄 머플러', price: 175000, icon: '🧣', desc: '부모님/어르신들이 애용하는 부드럽고 클래식한 실크 스카프' },
+      { id: 315, cat: 'fashion', name: '비비안웨스트우드 울 바젤 베레모 / 니트 비니', price: 195000, icon: '🧢', desc: '시그니처 ORB 자수 포인트로 패셔너블한 럭셔리 모자' },
+      { id: 316, cat: 'fashion', name: '정관장 홍삼정 순수 240g 기획 세트', price: 210000, icon: '🍯', desc: '100% 홍삼 농축액으로 진한 기력을 선물하는 프리미엄 효도템' },
+      { id: 317, cat: 'fashion', name: '아미(AMI) 하트 로고 자수 코튼 볼캡', price: 225000, icon: '🧢', desc: '프랑스 감성의 하트 로고 자수가 매력적인 명품 볼캡' },
+      { id: 318, cat: 'fashion', name: '비비안웨스트우드 천연 가죽 사피아노 카드지갑', price: 245000, icon: '👛', desc: '골드 메탈 로고와 견고한 사피아노 가죽의 베스트셀러' },
+      { id: 319, cat: 'fashion', name: '아미(AMI) 하트 로고 클래식 울 가디건', price: 260000, icon: '🧥', desc: '부드러운 울 소재와 세련된 핏의 워너비 명품 가디건' },
+      { id: 320, cat: 'fashion', name: '아크네 스튜디오 울 프린지 머플러', price: 290000, icon: '🧣', desc: '도톰한 보온성과 핑크 라벨 감성의 시그니처 머플러' },
+      { id: 321, cat: 'fashion', name: '정관장 홍삼정 마스터클래스 200g', price: 320000, icon: '🍯', desc: '최상급 지삼이 함유된 최고급 VIP 프리미엄 홍삼 농축액' },
+      { id: 322, cat: 'fashion', name: '메종 마르지엘라 스티치 레더 카드지갑', price: 340000, icon: '👛', desc: '4스티치 포인트의 미니멀하고 시크한 럭셔리 카드 지갑' },
+      { id: 323, cat: 'fashion', name: '보테가 베네타 인트레치아토 가죽 카드케이스', price: 390000, icon: '👛', desc: '장인 정신의 가죽 위빙 패턴이 돋보이는 하이엔드 지갑' },
+      { id: 324, cat: 'fashion', name: '셀린느 트리옹프 플랩 천연 가죽 카드홀더', price: 450000, icon: '👛', desc: '골드 트리옹프 버클로 고급스러움의 정점을 찍는 명품 지갑' },
+      { id: 325, cat: 'fashion', name: '구찌 GG 마몽 레더 카드케이스', price: 490000, icon: '👛', desc: '더블 G 메탈 장식이 돋보이는 클래식 럭셔리 지갑' },
+      { id: 334, cat: 'fashion', name: '옐로우스톤 사피아노 가죽 카드 지갑', price: 9900, icon: '👛', desc: '카드와 자주 쓰는 소지품을 깔끔하게 보관할 수 있는 실용적인 선물' },
+      { id: 335, cat: 'fashion', name: '카카오프렌즈 춘식이 미니 파우치', price: 9000, icon: '👝', desc: '작은 소지품을 넣어 다니기 좋은 귀엽고 실용적인 데일리 파우치' },
+      { id: 336, cat: 'fashion', name: '스투피 삼겹살 양말 3켤레 세트', price: 10000, icon: '🧦', desc: '재미있는 디자인으로 가볍게 웃음을 줄 수 있는 센스 있는 선물' },
+    ];
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => { toast.classList.add('opacity-0', 'pointer-events-none'); }, 2000);
+    }
+
+    function setStep(stepNum) {
+      currentStep = stepNum;
+      const lockScreen = document.getElementById('lock-screen');
+      const appMain = document.querySelector('main');
+      const appHeader = document.querySelector('header');
+
+      for (let i = 1; i <= 4; i++) {
+        const card = document.getElementById(`step-card-${i}`);
+        if (card) {
+          if (i === stepNum) card.classList.add('step-active');
+          else card.classList.remove('step-active');
+        }
+      }
+
+      if (stepNum === 1) {
+        lockScreen.classList.remove('opacity-0', 'pointer-events-none', 'is-hidden');
+        lockScreen.classList.add('is-visible');
+        lockScreen.style.zIndex = '60';
+        lockScreen.style.pointerEvents = 'auto';
+        if (appMain) appMain.style.pointerEvents = 'none';
+        if (appHeader) appHeader.style.pointerEvents = 'none';
+        document.getElementById('msg-result').classList.add('hidden');
+        document.getElementById('generated-msg').innerText = '';
+      } else {
+        lockScreen.classList.add('opacity-0', 'pointer-events-none', 'is-hidden');
+        lockScreen.classList.remove('is-visible');
+        lockScreen.style.zIndex = '0';
+        lockScreen.style.pointerEvents = 'none';
+        if (appMain) appMain.style.pointerEvents = 'auto';
+        if (appHeader) appHeader.style.pointerEvents = 'auto';
+        if (stepNum === 2) { switchTab('dday', 2); }
+        else if (stepNum === 3) {
+          switchTab('gift', 3);
+          document.getElementById('gift-price-slider').value = 50000;
+          updatePriceDisplay(50000);
+          recommendGift();
+        } else if (stepNum === 4) {
+          switchTab('msg', 4);
+          document.getElementById('msg-custom-prompt').value = "첫 직장 화이팅 하라고 해줘!";
+          document.getElementById('msg-result').classList.add('hidden');
+          document.getElementById('generated-msg').innerText = '';
+        }
+      }
+    }
+
+    function unlockApp() { setStep(2); }
+    window.unlockApp = unlockApp;
+    window.setStep = setStep;
+
+    function resetDemo() {
+      document.getElementById('msg-result').classList.add('hidden');
+      document.getElementById('generated-msg').innerText = '';
+      document.getElementById('msg-custom-prompt').value = '';
+      setStep(1);
+    }
+
+    function switchTab(tab, stepNum) {
+      ['dday', 'gift', 'msg'].forEach(t => {
+        const sec = document.getElementById(`sec-${t}`);
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === tab) {
+          sec.classList.remove('hidden');
+          btn.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+        } else {
+          sec.classList.add('hidden');
+          btn.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+        }
+      });
+
+      if (tab === 'gift') { updateFriendDropdown(); }
+
+      if (stepNum) {
+        currentStep = stepNum;
+        for (let i = 1; i <= 4; i++) {
+          const card = document.getElementById(`step-card-${i}`);
+          if (i === stepNum) card.classList.add('step-active');
+          else card.classList.remove('step-active');
+        }
+      }
+    }
+
+    function getDday(item) {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const target = getNextOccurrenceDate(item);
+      const diffDays = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+      return diffDays === 0 ? "D-Day 🎉" : `D-${diffDays}`;
+    }
+
+    function renderBirthdays() {
+      const listEl = document.getElementById('birthday-list');
+      if (birthdays.length === 0) {
+        listEl.innerHTML = `<p class="text-[10px] text-gray-400 text-center py-4">등록된 생일이 없어요.</p>`;
+        return;
+      }
+
+      listEl.innerHTML = birthdays.map(item => {
+        const ddayStr = getDday(item);
+        const isToday = ddayStr.includes('🎉');
+        const logCount = item.logs ? item.logs.length : 0;
+        const calBadge = item.calendarType === 'lunar'
+          ? '<span class="ml-1 px-1 py-0.5 rounded bg-brand-50 text-brand-500 text-[9px] font-bold">음력' + (item.isLeapMonth ? '(윤달)' : '') + '</span>'
+          : '<span class="ml-1 px-1 py-0.5 rounded bg-gray-100 text-gray-400 text-[9px] font-bold">양력</span>';
+
+        return `
+          <div class="p-3 bg-white rounded-xl border border-gray-100 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span class="text-base">🍰</span>
+                <div>
+                  <p class="text-[11px] font-bold text-gray-900">${item.name}</p>
+                  <p class="text-[10px] text-gray-400">${item.date} (${item.notify}일 전 알림)${calBadge}</p>
+                </div>
+              </div>
+              <span class="text-[10px] font-extrabold px-2 py-1 rounded-lg ${isToday ? 'bg-brand-400 text-white animate-pulse' : 'bg-brand-50 text-brand-500'}">
+                ${ddayStr}
+              </span>
+            </div>
+            <div class="pt-1.5 border-t border-gray-50 flex items-center justify-between text-[10px]">
+              <span class="text-gray-400">🎁 선물 기록 <strong class="text-brand-500 font-bold">${logCount}개</strong></span>
+              <button onclick="openLogModal(${item.id})" class="px-2 py-1 bg-gray-100 hover:bg-brand-50 hover:text-brand-500 text-gray-700 font-bold rounded-lg transition">
+                선물 기록 보기
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      safeCreateIcons();
+    }
+
+    function addBirthday(e) {
+      e.preventDefault();
+      const name = document.getElementById('friend-name').value;
+      const date = document.getElementById('friend-date').value;
+      const notify = document.getElementById('notify-days').value;
+      const calendarType = currentCalendarType;
+      const isLeapMonth = calendarType === 'lunar' && document.getElementById('is-leap-month').checked;
+
+      // 음력 날짜 유효성 검증 (예: 윤달이 없는 해에 윤달 선택 시)
+      if (calendarType === 'lunar' && SL) {
+        try {
+          const [y, m, d] = date.split('-').map(Number);
+          const check = SL.lunar2solar(y, m, d, isLeapMonth);
+          if (!check || check.cYear === undefined) throw new Error('invalid lunar date');
+        } catch (err) {
+          showToast('선택하신 음력 날짜(윤달 포함)를 확인해주세요 😥');
+          return;
+        }
+      }
+
+      birthdays.push({ id: Date.now(), name, date, calendarType, isLeapMonth, notify, logs: [] });
+      renderBirthdays();
+      document.getElementById('birthday-form').reset();
+      setCalendarType('solar');
+      showToast('생일이 등록되었습니다! ✨');
+    }
+
+    function updateFriendDropdown() {
+      const select = document.getElementById('gift-target-friend');
+      if (birthdays.length === 0) {
+        select.innerHTML = `<option value="">등록된 친구가 없습니다</option>`;
+        document.getElementById('friend-log-info').classList.add('hidden');
+        return;
+      }
+
+      select.innerHTML = birthdays.map(b => `<option value="${b.id}">${b.name} (${b.date}${b.calendarType === 'lunar' ? ' 음력' : ''})</option>`).join('');
+      onFriendSelectChange();
+    }
+
+    function onFriendSelectChange() {
+      const select = document.getElementById('gift-target-friend');
+      const friendId = parseInt(select.value);
+      const friend = birthdays.find(b => b.id === friendId);
+
+      const infoBox = document.getElementById('friend-log-info');
+      const pastText = document.getElementById('past-logs-text');
+
+      if (friend && friend.logs && friend.logs.length > 0) {
+        pastText.innerText = friend.logs.map(l => l.item).join(', ');
+        infoBox.classList.remove('hidden');
+      } else {
+        pastText.innerText = "없음";
+        infoBox.classList.add('hidden');
+      }
+    }
+
+    function updatePriceDisplay(val) {
+      document.getElementById('price-display').innerText = `${parseInt(val).toLocaleString()} 원`;
+    }
+
+    /* MODAL CONTROLS */
+    function openLogModal(friendId) {
+      selectedFriendForLog = birthdays.find(b => b.id === friendId);
+      if (!selectedFriendForLog) return;
+
+      document.getElementById('modal-friend-name').innerText = selectedFriendForLog.name;
+      renderLogModalList();
+
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('new-log-date').value = today;
+
+      document.getElementById('log-modal').classList.remove('hidden');
+      safeCreateIcons();
+    }
+
+    function closeLogModal() {
+      document.getElementById('log-modal').classList.add('hidden');
+      selectedFriendForLog = null;
+    }
+
+    function renderLogModalList() {
+      const logListEl = document.getElementById('modal-log-list');
+      const logs = selectedFriendForLog.logs || [];
+
+      if (logs.length === 0) {
+        logListEl.innerHTML = `<p class="text-[9px] text-gray-400 text-center py-2">기록된 선물이 없어요.</p>`;
+        return;
+      }
+
+      logListEl.innerHTML = logs.map(l => `
+        <div class="p-1.5 bg-gray-50 rounded-lg flex items-center justify-between text-[9px] border border-gray-100">
+          <div>
+            <span class="font-bold text-gray-800 block">${l.item}</span>
+            <span class="text-gray-400">${l.date} ${l.price ? '· ' + l.price : ''}</span>
+          </div>
+          <span class="text-[8px] font-bold text-brand-500 bg-brand-50 px-1 py-0.5 rounded">기록</span>
+        </div>
+      `).join('');
+    }
+
+    function addGiftLog(e) {
+      e.preventDefault();
+      if (!selectedFriendForLog) return;
+
+      const item = document.getElementById('new-log-item').value;
+      const price = document.getElementById('new-log-price').value || "가격 미입력";
+      const date = document.getElementById('new-log-date').value;
+
+      selectedFriendForLog.logs.push({ id: Date.now(), item, price, date });
+      renderLogModalList();
+      renderBirthdays();
+      onFriendSelectChange();
+
+      document.getElementById('new-log-item').value = '';
+      document.getElementById('new-log-price').value = '';
+      showToast('선물 기록이 추가되었습니다! 🎁');
+    }
+
+    function openGiftDetailModal(itemName) {
+      let item = currentGiftPool.find(g => g.name === itemName) || giftDatabase.find(g => g.name === itemName);
+      if (!item) {
+        item = { name: itemName, price: 48000, icon: "🎁", desc: "선호도가 높은 생일 추천 아이템입니다." };
+      }
+
+      document.getElementById('detail-icon').innerText = item.icon || "🎁";
+      document.getElementById('detail-title').innerText = item.name;
+      document.getElementById('detail-price').innerText = `약 ${parseInt(item.price).toLocaleString()}원`;
+      document.getElementById('detail-desc').innerText = item.desc || `${item.name} - 만족도가 높은 실존 추천 상품입니다.`;
+
+      const itemCat = item.cat || null;
+
+      let related = giftDatabase
+        .filter(g => g.name !== item.name)
+        .filter(g => !itemCat || g.cat === itemCat)
+        .sort((a, b) => Math.abs(a.price - item.price) - Math.abs(b.price - item.price))
+        .slice(0, 2);
+
+      if (related.length < 2) {
+        const fallback = giftDatabase
+          .filter(g => g.name !== item.name)
+          .filter(g => !itemCat || g.cat === itemCat)
+          .filter(g => !related.some(r => r.name === g.name))
+          .sort((a, b) => Math.abs(a.price - item.price) - Math.abs(b.price - item.price))
+          .slice(0, 2 - related.length);
+        related = related.concat(fallback);
+      }
+
+      document.getElementById('detail-related-list').innerHTML = related.map(r => `
+        <div onclick="openGiftDetailModal('${r.name}')" class="p-1.5 bg-gray-50 hover:bg-brand-50/50 rounded-lg flex items-center justify-between text-[9px] cursor-pointer transition border border-gray-100">
+          <div class="flex items-center gap-1">
+            <span>${r.icon}</span>
+            <span class="font-bold text-gray-800">${r.name}</span>
+          </div>
+          <span class="text-gray-400">약 ${r.price.toLocaleString()}원</span>
+        </div>
+      `).join('');
+
+      document.getElementById('detail-modal').classList.remove('hidden');
+      safeCreateIcons();
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detail-modal').classList.add('hidden');
+    }
+
+    /* 🎁 1. RAG 정밀 큐레이션 선물 추천 (랜덤 제거 + AI 상품 변조 검증 반영) */
+    async function recommendGift() {
+      const select = document.getElementById('gift-target-friend');
+      const friendId = parseInt(select.value);
+      const friend = birthdays.find(b => b.id === friendId);
+
+      const catVal = document.getElementById('gift-category').value;
+      const targetBudget = parseInt(document.getElementById('gift-price-slider').value);
+
+      const pastLogs = (friend && friend.logs && friend.logs.length > 0) 
+        ? friend.logs.map(l => l.item).join(', ') 
+        : '없음';
+
+      const catMap = { beauty: "뷰티/코스메틱/향수", tech: "전자기기/테크", fashion: "패션/잡화/라이프" };
+      const friendName = friend ? friend.name : "친구";
+
+      const loadingBox = document.getElementById('gift-loading');
+      const resultBox = document.getElementById('gift-result');
+      const itemsBox = document.getElementById('gift-items');
+      const engineTag = document.getElementById('gift-engine-tag');
+
+      resultBox.classList.add('hidden');
+      loadingBox.classList.remove('hidden');
+
+      // 1. 카테고리 일치 + 예산 이하(<=) + 이미 준 선물 제외
+      let candidatePool = giftDatabase.filter(item => {
+        const matchCat = (item.cat === catVal);
+        const matchPrice = (item.price <= targetBudget);
+        const notGiven = (pastLogs === '없음' || !pastLogs.includes(item.name));
+        return matchCat && matchPrice && notGiven;
+      });
+
+      if (candidatePool.length === 0) {
+        candidatePool = giftDatabase.filter(item => item.cat === catVal && item.price <= targetBudget);
+      }
+
+      // 같은 카테고리 안에서 예산과 가장 비슷한 가격대 우선 추천
+      const topCandidates = [...candidatePool]
+        .sort((a, b) => Math.abs(a.price - targetBudget) - Math.abs(b.price - targetBudget))
+        .slice(0, 6);
+
+      const prompt = `[맞춤 선물 선정 요청]
+- 받는 분: ${friendName}
+- 카테고리: ${catMap[catVal]}
+- 희망 예산: ${targetBudget.toLocaleString()}원 이하 (※ 필수: ${targetBudget.toLocaleString()}원을 초과하는 상품 절대 금지)
+- 이미 선물한 항목: ${pastLogs}
+- 추천 규칙: 같은 카테고리 안에서 가격이 예산에 가장 비슷한 실존 상품 3개를 우선 추천해주세요. 단순히 가장 비싼 상품이 아니라 예산에 맞는 비슷한 가격대 상품을 고르세요.`;
+
+      try {
+        const resp = await fetch(GEMINI_API_PROXY, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            mode: 'gift',
+            prompt: prompt,
+            candidates: topCandidates
+          })
+        });
+
+        const data = await resp.json();
+
+        if (resp.ok && data.text) {
+          const jsonMatch = data.text.match(/\[[\s\S]*\]/);
+          if (jsonMatch) {
+            const aiItems = JSON.parse(jsonMatch[0]);
+
+            // 🔴 핵심: AI가 후보 DB에 실제로 있는 상품만 골랐는지 이름으로 대조 검증
+            // 매칭되면 DB 원본 데이터(name/price/icon)로 강제 통일, desc(추천 이유)만 AI 텍스트 사용
+            const validItems = aiItems
+              .map(ai => {
+                const matched = topCandidates.find(c => c.name === ai.name);
+                if (!matched) return null; // 후보에 없는 상품 → 제거
+                return {
+                  name: matched.name,
+                  price: matched.price,
+                  icon: matched.icon,
+                  cat: matched.cat,
+                  desc: ai.desc || matched.desc
+                };
+              })
+              .filter(Boolean)
+              .filter(i => i.price <= targetBudget);
+
+            if (validItems.length > 0) {
+              engineTag.innerText = "AI 추천";
+              engineTag.className = "text-[9px] font-bold text-brand-500 bg-brand-50 px-2 py-0.5 rounded-md";
+
+              currentGiftPool = validItems;
+
+              itemsBox.innerHTML = validItems.map(i => `
+                <div onclick="openGiftDetailModal('${i.name}')" class="p-2.5 bg-white hover:bg-brand-50/30 rounded-xl border border-gray-100 flex items-center justify-between shadow-sm cursor-pointer transition">
+                  <div class="flex items-center gap-2">
+                    <span class="text-base">${i.icon || '🎁'}</span>
+                    <div>
+                      <span class="text-[11px] font-bold text-gray-800 block">${i.name}</span>
+                      <span class="text-[9px] text-gray-400">약 ${parseInt(i.price).toLocaleString()}원</span>
+                    </div>
+                  </div>
+                  <span class="text-[10px] font-bold text-brand-500 bg-brand-50 px-2 py-0.5 rounded-lg">상세보기 ></span>
+                </div>
+              `).join('');
+
+              resultBox.classList.remove('hidden');
+              safeCreateIcons();
+              return;
+            }
+          }
+        }
+        throw new Error('AI 응답 파싱 실패 또는 유효 상품 없음');
+      } catch (err) {
+        console.warn("AI 실패 시 스마트 폴백:", err);
+        engineTag.innerText = "맞춤 큐레이션 Engine";
+        engineTag.className = "text-[9px] font-bold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md";
+        
+        const fallback = topCandidates.slice(0, 3);
+        currentGiftPool = fallback;
+
+        itemsBox.innerHTML = fallback.map(i => `
+          <div onclick="openGiftDetailModal('${i.name}')" class="p-2.5 bg-white hover:bg-brand-50/30 rounded-xl border border-gray-100 flex items-center justify-between shadow-sm cursor-pointer transition">
+            <div class="flex items-center gap-2">
+              <span class="text-base">${i.icon}</span>
+              <div>
+                <span class="text-[11px] font-bold text-gray-800 block">${i.name}</span>
+                <span class="text-[9px] text-gray-400">약 ${parseInt(i.price).toLocaleString()}원</span>
+              </div>
+            </div>
+            <span class="text-[10px] font-bold text-brand-500 bg-brand-50 px-2 py-0.5 rounded-lg">상세보기 ></span>
+          </div>
+        `).join('');
+
+        resultBox.classList.remove('hidden');
+        safeCreateIcons();
+      } finally {
+        loadingBox.classList.add('hidden');
+      }
+    }
+
+    /* 💌 2. UI 옵션 100% 반영 축하 멘트 생성 함수 */
+    /* 💌 2. UI 옵션 100% 반영 축하 멘트 생성 함수 */
+    function normalizeGeneratedText(text) {
+      if (!text) return '';
+      return text
+        .replace(/[\u4E00-\u9FFF\u3400-\u4DBF\u3040-\u30FF\u0600-\u06FF\u0900-\u097F]/g, ' ') // 한자, 일본어, 아랍어, 힌디어 제거
+        .replace(/[A-Za-z]/g, ' ') // 영문 제거
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    }
+
+    function countSentences(text) {
+      const matches = text.match(/[.!?](?=\s|$)/g) || [];
+      return matches.length || 1;
+    }
+
+    function buildFallbackMessage({ relVal, speechVal, toneVal, lengthVal, cleanCoreMsg }) {
+      const greeting = speechVal === 'jondat' ? '생일 진심으로 축하드립니다!' : '생일 축하해!';
+      const cheerText = cleanCoreMsg ? `${cleanCoreMsg}!` : '오늘 하루 정말 행복하게 보내!';
+      const emoji = toneVal === 'plain' ? '' : toneVal === 'cute' ? ' 🍰' : toneVal === 'funny' ? ' 🎉' : ' 💌';
+
+      if (lengthVal === 'short') {
+        return `${greeting} ${cheerText}${emoji}`;
+      }
+
+      if (lengthVal === 'long') {
+        return `${greeting} ${cheerText} 오늘 너에게만큼은 특별하고 소중한 순간이 가득하길 바라!${emoji}`;
+      }
+
+      return `${greeting} ${cheerText} 오늘 하루 마음껏 웃고 행복하게 보내!${emoji}`;
+    }
+
+    async function generateMessageWithRealAI() {
+      const relVal = document.getElementById('msg-relation').value;
+      const speechVal = document.getElementById('msg-speech').value;
+      const toneVal = document.getElementById('msg-tone').value;
+      const lengthVal = document.getElementById('msg-length').value;
+      const rawPrompt = document.getElementById('msg-custom-prompt').value.trim();
+
+      const loadingBox = document.getElementById('msg-loading');
+      const resultBox = document.getElementById('msg-result');
+      const generatedMsgEl = document.getElementById('generated-msg');
+
+      resultBox.classList.add('hidden');
+      loadingBox.classList.remove('hidden');
+
+      const relMap = {
+        friend: "친구 (편하고 허물없는 다정한 사이)",
+        family: "가족 (소중하고 따뜻한 사이)",
+        senior: "선배 / 직장동료 (예의 바르고 격식 있는 사이)"
+      };
+
+      const speechMap = {
+        banmal: "반말 (예: ~해, ~했어, ~하자 등 편안한 어투)",
+        jondat: "존댓말 (예: ~하세요, ~했어요, ~하길 바라요 등 정중한 어투)"
+      };
+
+      const toneMap = {
+        plain: "담백하게 (이모티콘 전혀 쓰지 말 것)",
+        cute: "귀엽고 애교 있게 (이모티콘 1~2개 적극 사용)",
+        funny: "재치 있고 유쾌하게 (밝고 경쾌한 리듬)",
+        touching: "진중하고 감동적으로 (이모티콘 최대 1개)"
+      };
+
+      const lengthMap = {
+        short: "1~2문장으로 아주 간결하게",
+        medium: "2~3문장으로 보통 분량으로",
+        long: "3~4문장으로 정성스럽게"
+      };
+
+      let cleanCoreMsg = rawPrompt
+        .replace(/(?:라고|이라고)\s*(?:전해줘|말해줘|해줘|써줘|부탁해|해)\s*$/g, '')
+        .replace(/(?:전해줘|말해줘|해줘|써줘|부탁해)\s*$/g, '')
+        .trim();
+
+      const prompt = `[생일 축하 메시지 작성 요청]
+- 관계: ${relMap[relVal] || '친구'}
+- 말투: ${speechMap[speechVal] || '반말'}
+- 톤앤매너: ${toneMap[toneVal] || '담백하게'}
+- 분량: ${lengthMap[lengthVal] || '2~3문장으로 보통 분량으로'}
+${cleanCoreMsg ? `- 상대방에게 꼭 전하고 싶은 축하/응원 내용: "${cleanCoreMsg}"` : ''}
+
+[절대 규칙]
+1. 사용자가 선택한 관계, 말투, 톤, 분량을 엄격히 반영하세요.
+2. 관계는 문장의 격식 또는 친밀감을 결정할 뿐, 사용자가 실제로 취업/승진/이직 등을 했다는 사실을 추측해 말하지 마세요.
+3. '선배/직장동료'라고 선택해도, 사용자가 실제로 취업 축하를 요청하지 않으면 취업 축하 문장을 만들지 마세요.
+4. 입력 문구가 '~해줘', '~라고 해줘'처럼 요청형이면 해당 내용이 '내가 상대방에게 건네는 말'이 되도록 자연스럽게 바꾸세요.
+5. 한자, 일본어, 중국어, 아랍어, 힌디어, 영어는 절대 쓰지 마세요.
+6. 반드시 완성문 1개만 단답형으로 출력하세요.`;
+
+      try {
+        const resp = await fetch(GEMINI_API_PROXY, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mode: 'message', prompt, tone: toneVal })
+        });
+
+        const data = await resp.json();
+        if (!resp.ok || !data.text) throw new Error(data.error || 'AI 응답 없음');
+
+        let cleanText = normalizeGeneratedText(data.text);
+        
+        // 엉뚱한 직장 키워드 오염 방어
+        const hasWrongCareerCue = relVal !== 'senior' && /(취업|입사|승진|이직|채용|회사|사수|팀장)/i.test(cleanText);
+        if (hasWrongCareerCue) {
+          throw new Error('AI 응답 오염 감지');
+        }
+
+        generatedMsgEl.innerText = cleanText || buildFallbackMessage({ relVal, speechVal, toneVal, lengthVal, cleanCoreMsg });
+      } catch (err) {
+        console.warn("AI 멘트 생성 실패, 로컬 폴백 사용:", err);
+        generatedMsgEl.innerText = buildFallbackMessage({ relVal, speechVal, toneVal, lengthVal, cleanCoreMsg });
+      } finally {
+        loadingBox.classList.add('hidden');
+        resultBox.classList.remove('hidden');
+        safeCreateIcons();
+      }
+    }
+    function copyMsg() {
+      const text = document.getElementById('generated-msg').innerText;
+      navigator.clipboard.writeText(text);
+      showToast('축하 멘트가 복사되었습니다! ✨');
+    }
+
+    setStep(1);
+    renderBirthdays();
+  </script>
+</body>
+</html>
