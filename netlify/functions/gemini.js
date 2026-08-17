@@ -87,13 +87,14 @@ exports.handler = async (event) => {
         'Authorization': `Bearer ${API_KEY}`
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'qwen/qwen3.6-27b',
         messages: [
           { role: 'system', content: SYSTEM_INSTRUCTION },
           { role: 'user', content: userPrompt }
         ],
         temperature: mode === 'gift' ? 0.1 : 0.5,
-        max_tokens: 800
+        max_tokens: 800,
+        reasoning_format: 'hidden'
       })
     });
 
